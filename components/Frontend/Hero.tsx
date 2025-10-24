@@ -1,3 +1,5 @@
+import SearchBar from "./SearchBar";
+
 const Hero = () => {
   return (
     <div className="bg-blue-950">
@@ -15,8 +17,9 @@ const Hero = () => {
                   throughout the dayed.
                 </p>
                 {/* SEARCH BAR HERE */}
+                <SearchBar />
                 {/* CTA BTNS */}
-                <ul className="flex flex-wrap items-center">
+                <ul className="flex flex-wrap items-center mt-6">
                   <li>
                     <a
                       href="/#"
