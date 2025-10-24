@@ -1,20 +1,28 @@
+
 import SearchBar from "./SearchBar";
+import TransitionalText from "./TransitionalText";
 
 const Hero = () => {
+  const TEXTS = ["Terapeuta", "Ocupacional", "Psicóloga"];
   return (
     <div className="bg-blue-950">
       <div className="relative pb-[110px] pt-[50px] dark:bg-dark lg:pt-[50px] max-w-6xl mx-auto">
         <div className="container">
           <div className="-mx-4 flex flex-wrap">
-            <div className="w-full px-4 lg:w-5/12">
+            <div className="w-full px-4 lg:w-6/12">
               <div className="hero-content">
-                <h1 className="mb-5 text-4xl font-bold leading-[1.208] text-gray-50 dark:text-white sm:text-[42px] lg:text-[40px] xl:text-5xl">
-                  Kickstart Startup Website with TailGrids
+                <h1 className="mb-5 text-4xl font-bold leading-[1.208]
+                 text-gray-50 dark:text-white sm:text-[42px] 
+                 lg:text-[40px] xl:text-5xl flex flex-wrap items-center gap-3">
+                  <span>Reserve sua </span> 
+                  <TransitionalText className="text-blue-500" TEXTS=
+                  {TEXTS}/>
+                  <br />
+                  <span>Sessão agora</span>
                 </h1>
                 <p className="mb-8 max-w-[480px] text-base text-gray-100 dark:text-dark-6">
-                  With TailGrids, business and students thrive together.
-                  Business can perfectly match their staffing to changing demand
-                  throughout the dayed.
+                  A saúde não deve ser um quebra-cabeça, estamos eliminando a enrolação para
+                  lhe oferecer assistência médica simples, acessível e transparente.
                 </p>
                 {/* SEARCH BAR HERE */}
                 <SearchBar />
@@ -76,7 +84,7 @@ const Hero = () => {
               </div>
             </div>
             <div className="hidden px-4 lg:block lg:w-1/12"></div>
-            <div className="w-full px-4 lg:w-6/12">
+            <div className="w-full px-4 lg:w-5/12">
               <div className="lg:ml-auto lg:text-right">
                 <div className="relative z-10 inline-block pt-11 lg:pt-0">
                   <img
