@@ -5,6 +5,7 @@ import TransitionalText from "./TransitionalText";
 
 
 
+
 const Hero = () => {
   const TEXTS = ["Terapia","Psicóloga"];
 
