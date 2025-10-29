@@ -6,7 +6,7 @@ import TransitionalText from "./TransitionalText";
 
 
 const Hero = () => {
-  const TEXTS = ["Terapeuta", "Ocupacional", "Psicóloga"];
+  const TEXTS = ["Terapia","Psicóloga"];
   return (
     <div className="bg-blue-950">
       <div className="relative pb-[110px] pt-[50px] dark:bg-dark lg:pt-[50px] max-w-6xl mx-auto">
@@ -57,7 +57,20 @@ const Hero = () => {
                     </a>
                   </li>
                 </ul>
-                
+                <div className="py-4 pt-8 flex gap-4">
+                   <div className="flex flex-col items-center justify-center">
+                    <span className="font-bold text-gray-50">1</span>
+                    <span className="text-sm text-gray-400">
+                      Especialistas Ativos
+                    </span>
+                   </div> 
+                   <div className="flex flex-col items-center justify-center">
+                    <span className="font-bold text-gray-50">20</span>
+                    <span className="text-sm text-gray-400">
+                      Pacientes Ativos
+                    </span>
+                   </div>
+                </div>
               </div>
             </div>
             <div className="hidden px-4 lg:block lg:w-1/12"></div>
@@ -126,6 +139,3 @@ const SingleImage = ({ href, imgSrc }:{href:string,imgSrc:string}) => {
     </>
   );
 };
-
-
-
