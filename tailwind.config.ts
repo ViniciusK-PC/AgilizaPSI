@@ -3,9 +3,12 @@ import type { Config } from "tailwindcss";
 const config = {
     darkMode: "class",
     content: [
-        './pages/**/*.{js,ts,jsx,tsx,mdx}',
-        './components/**/*.{js,ts,jsx,tsx,mdx}',
-        './app/**/*.{js,ts,jsx,tsx,mdx}',
+        "./pages/**/*.{ts,tsx}",
+        "./components/**/*.{ts,tsx}",
+        "./app/**/*.{ts,tsx}",
+        "./src/**/*.{ts,tsx}",
+        // "node_modules/flowbite-react/lib/esm/**/*.js",
+
     ],
     prefix: "",
     theme: {
@@ -76,5 +79,5 @@ const config = {
     },
 plugins: [require("tailwindcss-animate"), require("@tailwindcss/forms")],
 } satisfies Config
-
+//  require("flowbite/plugin")
 export default config;

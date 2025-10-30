@@ -44,7 +44,7 @@ export type SingleImageProps = {
 
 export default function Brands() {
   return (
-    <section className="bg-white py-10 lg:py-[60px] dark:bg-dark">
+    <section className="bg-slate-100 py-10 lg:py-[60px] dark:bg-dark">
         <h2 className="text-center pb-6">Confiado Por</h2>
       <div className="container mx-auto">
         <div className="-mx-4 flex flex-wrap">
