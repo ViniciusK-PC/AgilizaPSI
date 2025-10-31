@@ -22,6 +22,7 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { ChevronDownIcon, PhoneIcon, PlayCircleIcon } from '@heroicons/react/20/solid'
+import MegaMenu from './MegaMenu'
 
 function classNames(...classes: any) {
   return classes.filter(Boolean).join("");
@@ -127,7 +128,10 @@ export default function Navbar() {
           </div>
         </DialogPanel>
       </Dialog>
-
+      <div className="bg-white mx-auto py-4 top-20 w-full 
+      left-0 z-50 right-0 border-t border-gray-400/30 flex justify-center">
+        <MegaMenu />
+      </div>
     </header>
   )
 }
