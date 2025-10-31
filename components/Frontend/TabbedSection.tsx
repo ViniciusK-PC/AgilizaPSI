@@ -1,5 +1,4 @@
-import { Tab } from "@headlessui/react";
-import React from "react";
+import TabbedItems from "./TabbedItems";
 
 const TabbedSection = () => {
   return (
@@ -21,6 +20,9 @@ const TabbedSection = () => {
         </div>
 
      {/* Tabs */}
+    <div className="mx-auto max-w-6xl">
+        <TabbedItems />
+    </div>
       </div>
     </section>
   );
