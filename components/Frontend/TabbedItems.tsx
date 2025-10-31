@@ -40,7 +40,7 @@ export default function TabbedItems() {
         tabs.map((tab, i) => {
           return(
             <Tabs.Item key={i} active title={tab.title} icon={tab.icon}>
-             {/* <ServiceList /> */}
+          
              {tab.component}
             </Tabs.Item>
           );    
