@@ -39,10 +39,10 @@ export default function TabbedItems() {
       {
         tabs.map((tab, i) => {
           return(
-            <Tabs.Item key={i} active title={tab.title} icon={tab.icon}>
+            <TabItem key={i} active title={tab.title} icon={tab.icon}>
           
              {tab.component}
-            </Tabs.Item>
+            </TabItem>
           );    
         })
       }
