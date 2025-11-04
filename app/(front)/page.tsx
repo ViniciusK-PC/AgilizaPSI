@@ -11,7 +11,7 @@ export default function Home() {
       <Brands />
       <TabbedSection />
       <DoctorList />
-      <DoctorList title="Consulta Pisicologico presencial" isInPerson={true}/>
+      <DoctorList className="bg-white-100 py-8 lg:py-24" title="Consulta Pisicologico presencial" isInPerson={true}/>
     </section>
   );
 }

@@ -2,7 +2,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Stethoscope, Video } from "lucide-react"
 
-export default function DoctorCard({ isInPerson=false }:
+export default function DoctorCard({ isInPerson = false, }:
     { isInPerson?: boolean }) {
 
     const timeStamps = [
@@ -38,7 +38,7 @@ export default function DoctorCard({ isInPerson=false }:
     return (
         <div className="border border-gray-200 bg-white inline-flex
         flex-col py-8 px-6 rounded-md hover:border-gray-400 duration-300 transition-all">
-            <Link href="#">
+            <Link href="/doctor/slug">
                 <h2 className="uppercase font-bold text-2xl
             tracking-widest">Carolina Büttow, PS-G</h2>
 
@@ -52,15 +52,13 @@ export default function DoctorCard({ isInPerson=false }:
                             height={207}
                             alt="img1"
                             className="w-24 h-24 rounded-full object-cover" />
-                        {isInPerson &&
+                        {!isInPerson &&
                             (<p className="absolute bottom-0 right-2 bg-blue-200 w-10 h-10 flex items-center
-                    justify-center rounded-full text-blue-700"> <Video
-                                    className="w-6 h-6" /></p>
-                        )}
-
-
+                    justify-center rounded-full text-blue-700"> 
+                    <Video
+                    className="w-6 h-6" /></p>
+                            )}
                     </div>
-
                     <div className="flex flex-col gap-2">
                         <p className="flex items-center">
                             <Stethoscope className="w-4 h-4 mr-2 shrink-0" />
@@ -79,12 +77,12 @@ export default function DoctorCard({ isInPerson=false }:
                     <span className="text-gray-600">Terça, 12 de março.</span> <span className="font-bold">R$ 50,00</span>
 
                 </h3>
-                <div className="py-3 grid grid-cols-3 gap-4">
+                <div className="py-3 grid grid-cols-3 gap-2">
                     {
                         timeStamps.slice(0, 5).map((item, i) => {
                             return (
-                                <Link className="bg-blue-600 text-white py-2 px-3 text-center"
-                                 key={i} href="#">
+                                <Link className="bg-blue-600 text-sm text-white p-2  text-center"
+                                    key={i} href="#">
                                     {item.time}
                                     {item.period}
                                 </Link>
@@ -92,8 +90,9 @@ export default function DoctorCard({ isInPerson=false }:
 
                         })
                     }
-                    <Link className="text-center bg-blue-900 text-white py-2 px-3"
-                        href="#">
+                    <Link className="text-[0.7rem] text-center bg-blue-900 text-white 
+                    py-2 px-3 truncate"
+                        href="/doctors/slug">
                         Mais Horarios
                     </Link>
                 </div>
