@@ -1,9 +1,12 @@
-import React, { ReactNode } from 'react';
+import Navbar from '@/components/Dashboard/NavBar';
+import Sidebar from '@/components/Dashboard/Sidebar';
+
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div>
-        <h2>Iam Dashboard Only Pages Layout</h2>
+    <Navbar />
+    <Sidebar />
       {children}
     </div>
   );
