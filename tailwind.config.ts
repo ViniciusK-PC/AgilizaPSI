@@ -7,7 +7,7 @@ const config = {
         "./components/**/*.{ts,tsx}",
         "./app/**/*.{ts,tsx}",
         "./src/**/*.{ts,tsx}",
-        // "node_modules/flowbite-react/lib/esm/**/*.js",
+        "node_modules/flowbite-react/lib/esm/**/*.js",
 
     ],
     prefix: "",
@@ -79,5 +79,5 @@ const config = {
     },
 plugins: [require("tailwindcss-animate"), require("@tailwindcss/forms")],
 } satisfies Config
-//  require("flowbite/plugin")
+ 
 export default config;

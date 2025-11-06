@@ -6,8 +6,7 @@ export default function Layout({ children }:
   return (
     <div className="bg-white">
       <Navbar/>
-      
-      <div className="mt-[160px]">
+      <div className="mt-[150px] ">
         {children}
       </div>
     </div>

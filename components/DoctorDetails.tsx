@@ -1,7 +1,7 @@
 "use client"
 import { useState } from "react";
 import Availability from "./Availability";
- import { DayPicker } from "react-day-picker/persian"
+ 
 
 export default function DoctorDetails() {
   const [isActive,setIsActive] = useState('disponibilidade')
