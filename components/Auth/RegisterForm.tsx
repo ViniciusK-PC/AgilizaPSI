@@ -3,10 +3,13 @@ import { useForm } from "react-hook-form";
 import { type RegisterInputProps } from "@/types/type";
 import Link from "next/link"
 import TextInput from "../FormInputs/TextInput";
+import SubmitButton from "../FormInputs/SubmiButton";
+import { useState } from "react";
 
 
 
 export default function RegisterForm() {
+  const [isLoading, setIsLoading] = useState(false)
     const {
         register,
         handleSubmit,
@@ -84,15 +87,8 @@ export default function RegisterForm() {
             </div>
 
             <div>
-              <button
-                type="submit"
-                className="flex w-full justify-center rounded-md
-                 bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold
-                  text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2
-                   focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-              >
-                Registrar
-              </button>
+             <SubmitButton title="Criar uma conta" isLoading={isLoading}
+            loadingTitle="Criando por favor aguarde..."  />
             </div>
           </form>
 
