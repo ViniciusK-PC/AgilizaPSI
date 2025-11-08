@@ -58,6 +58,13 @@ export default function RegisterForm() {
             type="email" 
             errors={errors} 
             />
+            <TextInput 
+            label="Numero De Telefone" 
+            register={register} 
+            name="phone"
+            type="tel" 
+            errors={errors} 
+            />
 
              <div>
               <div className="flex items-center justify-between">
