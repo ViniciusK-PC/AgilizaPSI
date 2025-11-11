@@ -36,21 +36,13 @@ export default function RegisterForm() {
         </div>
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <TextInput 
-            label="Nome" 
+            label="Nome Completo" 
             register={register} 
-            name="firstName" 
+            name="fullName" 
             errors={errors} 
             />
-
-            <TextInput 
-            label="Sobre Nome" 
-            register={register} 
-            name="lastName" 
-            errors={errors} 
-            />
-            
            <TextInput 
             label="Email" 
             register={register} 
@@ -66,33 +58,15 @@ export default function RegisterForm() {
             errors={errors} 
             />
 
-             <div>
-              <div className="flex items-center justify-between">
-                <label htmlFor="password" className="block text-sm/6 font-medium text-gray-900">
-                  Senha
-                </label>
-                <div className="text-sm">
-                  <a href="#" className="font-semibold text-indigo-600 hover:text-indigo-500">
-                    Forgot password?
-                  </a>
-                </div>
-              </div>
-              <div className="mt-2">
-                <input
-                {...register("password",{required:true})}
-                  id="password"
-                  name="password"
-                  type="password"
-                  
-                  autoComplete="current-password"
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                />
+            <TextInput 
+            label="Senha" 
+            register={register} 
+            name="password"
+            type="password" 
+            errors={errors} 
+            />
 
-                {errors["password"] && (<span className="text-red-600 text-sm">Senha Obrigatório.</span>
-            )}
-              </div>
-            </div>
-
+           
             <div>
              <SubmitButton title="Criar uma conta" isLoading={isLoading}
             loadingTitle="Criando por favor aguarde..."  />

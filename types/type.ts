@@ -5,9 +5,13 @@ export type ServiceProps = {
 }
 
 export type RegisterInputProps = {
-    firstName: string;
-    lastName: string;
+    fullName: string;
     email: string;
     password: string;
     phone: string;
+}
+
+export type LoginInputProps = {
+    email: string;
+    password: string;
 }
