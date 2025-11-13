@@ -26,7 +26,7 @@ export default function LoginForm() {
     try {
       setIsLoading(true);
       console.log("Tentando iniciar sessão com as credenciais.:", data);
-      const loginData = await signIn("credenciais", {
+      const loginData = await signIn("credentials", {
         ...data,
         redirect: false,
       });
