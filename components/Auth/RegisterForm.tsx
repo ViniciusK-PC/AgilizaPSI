@@ -6,8 +6,9 @@ import TextInput from "../FormInputs/TextInput";
 import SubmitButton from "../FormInputs/SubmiButton";
 import { useState } from "react";
 import { createUser } from "@/actions/users";
-import { UserRole } from "@prisma/client";
+// import { UserRole } from "@prisma/client";
 import toast from "react-hot-toast";
+import { UserRole } from "@/generated/prisma/enums";
 
 
 
