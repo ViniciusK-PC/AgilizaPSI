@@ -5,9 +5,16 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { LoginInputProps } from "@/types/type";
 import SubmitButton from "../FormInputs/SubmiButton";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react"
+import { Alert } from "flowbite-react";
+import { HiInformationCircle } from "react-icons/hi";
 
 export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false)
+  const [showNotification, setShowNotification] = useState(false)
+  const router = useRouter()
   const {
     register,
     handleSubmit,
@@ -16,7 +23,31 @@ export default function LoginForm() {
   } = useForm<LoginInputProps>();
 
   async function onSubmit(data: LoginInputProps) {
-    console.log(data);
+    try {
+      setIsLoading(true);
+      console.log("Tentando iniciar sessão com as credenciais.:", data);
+      const loginData = await signIn("credenciais", {
+        ...data,
+        redirect: false,
+      });
+      console.log("Resposta de login:", loginData);
+      if (loginData?.error) {
+        setIsLoading(false);
+        toast.error("Erro ao iniciar sessão: Verifique suas credenciais");
+        setShowNotification(true);
+      } else {
+        // Sign-in was successful
+        setShowNotification(false);
+        reset();
+        setIsLoading(false);
+        toast.success("Login realizado com sucesso");
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      setIsLoading(false);
+      console.error("Erro de rede:", error);
+      toast.error("Parece que há algo errado com a sua rede.");
+    }
     // Handle registration logic here
   };
   return (
@@ -34,7 +65,15 @@ export default function LoginForm() {
       </div>
 
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+
+        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+          {showNotification && (
+            <Alert color="failure" icon={HiInformationCircle}>
+              <span className="font-medium">Sign-in error!</span> Please Check
+              your credentials
+            </Alert>
+          )}
+
           <Textinput
             label="Email"
             register={register}
@@ -71,8 +110,8 @@ export default function LoginForm() {
           </div>
 
           <div>
-            <SubmitButton title="Login" 
-            isLoading={isLoading}
+            <SubmitButton title="Login"
+              isLoading={isLoading}
               loadingTitle="Você está sendo conectado(a), aguarde..." />
           </div>
         </form>

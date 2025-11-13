@@ -34,16 +34,16 @@ export default function Navbar() {
 
   return (
     <header className="fixed top-0 bg-white border-b border-gray-400/30 w-full z-50">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between p-4 lg:px-8" aria-label="Global">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 lg:px-8" aria-label="Global">
         <div className="flex lg:flex-1">
-          <a href="#" className="-m-1.5 p-1.5">
+          <Link href="#" className="-m-1.5 p-1.5">
             <span className="sr-only">Sua Compania</span>
             <img
               alt=""
               src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"
               className="h-8 w-auto"
             />
-          </a>
+          </Link>
         </div>
         <div className="flex lg:hidden">
           <button
@@ -67,7 +67,8 @@ export default function Navbar() {
           </a>
         </PopoverGroup> 
         <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-          <Link href="/login" className="text-sm font-semibold leading-6 text-gray-50 bg-blue-500 py-3 px-6 rounded-md">
+          <Link href="/login" 
+          className="text-sm font-semibold leading-6 text-gray-50 bg-blue-500 py-3 px-6 rounded-md">
             Log in <span aria-hidden="true">&rarr;</span>
           </Link>
         </div>

@@ -4,6 +4,7 @@ import { RegisterInputProps } from "@/types/type";
 import { prismaClient } from "@/lib/db";
 import { Resend } from "resend"
 import EmailTemplate from "@/components/Emails/email-template";
+import { object } from "zod";
 
 export async function createUser(formData: RegisterInputProps) {
 
@@ -76,5 +77,38 @@ export async function createUser(formData: RegisterInputProps) {
     return {
       error: "Algo deu errado",
     };
+  }
+}
+
+export async function getUserById(id:string){
+  if(id){
+    try {
+      const user = await prismaClient.user.findUnique({
+        where:{
+          id
+        }
+      })
+      return user
+    } catch (error) {
+      console.log(error);
+    }
+  }
+}
+
+export async function updateUserById(id:string) {
+  if(id){
+    try {
+      const updateUser = await prismaClient.user.update({
+           where: {
+            id,
+           },
+           data: {
+            isVerfied:true,
+           },
+      });
+      return updateUser;
+    } catch (error) {
+      console.log(error)
+    }
   }
 }

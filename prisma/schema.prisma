@@ -9,6 +9,11 @@ generator client {
   output   = "../generated/prisma"
 }
 
+generator erd {
+  provider = "prisma-erd-generator"
+  output = "./erd.svg"
+}
+
 datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
