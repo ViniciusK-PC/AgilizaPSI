@@ -1,17 +1,15 @@
 "use client";
-import { BaggageClaim } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
 import React from "react";
 import Carousel from "react-multi-carousel";
 import "react-multi-carousel/lib/styles.css";
 import DoctorCard from "./DoctorCard";
+import { User } from "@prisma/client";
 
-export default function DoctorListCarousel({ 
+export default function DoctorListCarousel({
   doctors,
   isInPerson,
 }:{
-    doctors: any;
+    doctors: User[];
     isInPerson?: boolean;
   }) {
   const responsive = {
@@ -50,8 +48,8 @@ export default function DoctorListCarousel({
       dotListClass="custom-dot-list-style"
       itemClass="px-4"
     >
-      {doctors.map((doctor: any, i: number) => {
-        return <DoctorCard key={i} isInPerson={isInPerson} />
+      {doctors.map((doctor: User, i: number) => {
+        return <DoctorCard key={doctor.id || i} doctor={doctor} isInPerson={isInPerson} />
       })}
     </Carousel>
   );

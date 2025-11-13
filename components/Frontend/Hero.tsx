@@ -1,5 +1,6 @@
 
 import { Pill } from "lucide-react";
+import Link from "next/link";
 import SearchBar from "./SearchBar";
 import TransitionalText from "./TransitionalText";
 
@@ -33,29 +34,29 @@ const Hero = () => {
                 {/* CTA BTNS */}
                 <ul className="flex flex-wrap items-center mt-6">
                   <li>
-                    <a
+                    <Link
                       href="/#"
-                      className="inline-flex items-center 
-                      justify-center rounded-md bg-blue-600 px-6 py-3 
-                      text-center text-base font-medium text-white 
+                      className="inline-flex items-center
+                      justify-center rounded-md bg-blue-600 px-6 py-3
+                      text-center text-base font-medium text-white
                       hover:bg-blue-700 lg:px-7"
                     >
                       Preciso de Ajuda Urgente
-                    </a>
+                    </Link>
                   </li>
                   <li>
-                    <a
+                    <Link
                       href="/#"
                       className=" inline-flex items-center
-                       justify-center px-5 py-3 text-center text-base 
+                       justify-center px-5 py-3 text-center text-base
                        font-medium text-gray-50 hover:text-blue-500
                         dark:text-white"
-                    > 
+                    >
                       <span className="mr-2">
                         <Pill className="shrink-0 h-4 w-4 text-blue-600"/>
                       </span>
                       Precisa de uma Referencia
-                    </a>
+                    </Link>
                   </li>
                 </ul>
                 <div className="py-4 pt-8 flex gap-4">

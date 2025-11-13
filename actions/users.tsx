@@ -4,7 +4,6 @@ import { RegisterInputProps } from "@/types/type";
 import { prismaClient } from "@/lib/db";
 import { Resend } from "resend"
 import EmailTemplate from "@/components/Emails/email-template";
-import { object } from "zod";
 
 export async function createUser(formData: RegisterInputProps) {
 
@@ -51,7 +50,6 @@ export async function createUser(formData: RegisterInputProps) {
 
       // Send an Email with the Token on the link as a search param
       const token = newUser.token;
-      const userId = newUser.id;
       const firstName = newUser.name.split(" ")[0];
       const linkText = "Verify your Account ";
       const message =

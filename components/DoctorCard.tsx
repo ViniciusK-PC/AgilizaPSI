@@ -2,8 +2,10 @@ import Link from "next/link"
 import Image from "next/image"
 import { Stethoscope, Video } from "lucide-react"
 
-export default function DoctorCard({ isInPerson = false, }:
-    { isInPerson?: boolean }) {
+import { User } from "@prisma/client";
+
+export default function DoctorCard({ doctor, isInPerson = false }:
+    { doctor: User; isInPerson?: boolean }) {
 
     const timeStamps = [
         {
@@ -38,19 +40,19 @@ export default function DoctorCard({ isInPerson = false, }:
     return (
         <div className="border border-gray-200 bg-white inline-flex
         flex-col py-8 px-6 rounded-md hover:border-gray-400 duration-300 transition-all">
-            <Link href="/doctor/slug">
+            <Link href={`/doctor/${doctor.id}`}>
                 <h2 className="uppercase font-bold text-2xl
-            tracking-widest">Carolina Büttow, PS-G</h2>
+            tracking-widest">{doctor.name}</h2>
 
                 {isInPerson && (<p className="py-3">308 Rua Alberto Rosa, Pelotas, BR 96020350</p>
                 )}
                 <div className="flex items-center gap-4 py-4">
                     <div className="relative">
                         <Image
-                            src="/dotor.jpeg"
+                            src={doctor.image || "/dotor.jpeg"}
                             width={243}
                             height={207}
-                            alt="img1"
+                            alt={doctor.name}
                             className="w-24 h-24 rounded-full object-cover" />
                         {!isInPerson &&
                             (<p className="absolute bottom-0 right-2 bg-blue-200 w-10 h-10 flex items-center

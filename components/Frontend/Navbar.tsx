@@ -25,7 +25,7 @@ import { ChevronDownIcon, PhoneIcon, PlayCircleIcon } from '@heroicons/react/20/
 import MegaMenu from './MegaMenu'
 import Link from 'next/link'
 
-function classNames(...classes: any) {
+function classNames(...classes: (string | boolean | undefined | null)[]) {
   return classes.filter(Boolean).join("");
 }
 
