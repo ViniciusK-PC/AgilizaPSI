@@ -26,53 +26,58 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        console.log(
-          "Authorize function called with credentials:",
-          credentials
-        );
-        // Check if user credentials are Correct
-        if (!credentials?.email || !credentials?.password) {
-          console.log("No inputs found");
-          return null;
-        }
-        console.log("Pass 1 checked ");
-        //Check if user exists
-        const existingUser = await prismaClient.user.findUnique({
-          where: { email: credentials.email },
-        });
-
-        if (!existingUser) {
-          console.log("No user found");
-          return null;
-        }
-
-        console.log("Pass 2 Checked");
-        console.log(existingUser);
-        let passwordMatch: boolean = false;
-        //Check if Password is correct
-        if (existingUser && existingUser.password) {
-          // if user exists and password exists
-          passwordMatch = await compare(
-            credentials.password,
-            existingUser.password
+        try {
+          console.log(
+            "Authorize function called with credentials:",
+            credentials
           );
+          // Check if user credentials are Correct
+          if (!credentials?.email || !credentials?.password) {
+            throw { error: "No Inputs Found", status: 401 };
+          }
+          console.log("Pass 1 checked ");
+          //Check if user exists
+          const existingUser = await prismaClient.user.findUnique({
+            where: { email: credentials.email },
+          });
+ 
+          if (!existingUser) {
+            console.log("No user found");
+            throw { error: "No user found", status: 401 };
+          }
+ 
+          console.log("Pass 2 Checked");
+          console.log(existingUser);
+          let passwordMatch: boolean = false;
+          //Check if Password is correct
+          if (existingUser && existingUser.password) {
+            // if user exists and password exists
+            passwordMatch = await compare(
+              credentials.password,
+              existingUser.password
+            );
+          }
+          if (!passwordMatch) {
+            console.log("Senha incorreta");
+            throw { error: "Senha incorreta", status: 401 };
+          }
+          console.log("Pass 3 Checked");
+          const user = {
+            id: existingUser.id,
+            name: existingUser.name,
+            email: existingUser.email,
+            role: existingUser.role,
+            picture:existingUser,
+          };
+          //
+          console.log("Compilado pelo usuário");
+          console.log(user);
+          return user;
+        } catch (error) {
+          console.log("TODOS Falharam");
+          console.log(error);
+          throw { error: "Algo deu errado", status: 401 };
         }
-        if (!passwordMatch) {
-          console.log("Senha incorreta");
-          return null;
-        }
-        console.log("Pass 3 Checked");
-        const user = {
-          id: existingUser.id,
-          name: existingUser.name,
-          email: existingUser.email,
-          role: existingUser.role,
-          picture: existingUser,
-        };
-        //
-        console.log("Compilado pelo usuário");
-        console.log(user);
-        return user;
       },
     }),
   ],
