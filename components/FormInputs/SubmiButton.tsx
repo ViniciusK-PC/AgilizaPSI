@@ -20,7 +20,7 @@ loadingTitle}:SubmitButtonProps) {
                   text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2
                    focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
               >
-                <Loader className="w-4 h-4 mr-2 flex-shrink-0 animate-spin"/> {loadingTitle}
+                <Loader className="w-4 h-4 mr-2 shrink-0 animate-spin"/> {loadingTitle}
               </button>
         ):(
             <button
