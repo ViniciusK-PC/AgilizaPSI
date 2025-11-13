@@ -8,7 +8,8 @@ import { useState } from "react";
 import { createUser } from "@/actions/users";
 //import { UserRole } from "@/generated/prisma/enums";
 import toast from "react-hot-toast";
-import { UserRole } from "@/generated/prisma/enums";
+import { UserRole } from "@prisma/client";
+
 
 
 

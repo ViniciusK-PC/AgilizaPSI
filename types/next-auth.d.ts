@@ -1,4 +1,4 @@
-import { UserRole } from "@/generated/prisma/enums";
+import { UserRole } from "@/generated/prisma";
 import type { User } from "next-auth";
 import "next-auth/jwt";
 type UserId = string;

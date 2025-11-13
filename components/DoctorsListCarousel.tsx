@@ -3,7 +3,8 @@ import React from "react";
 import Carousel from "react-multi-carousel";
 import "react-multi-carousel/lib/styles.css";
 import DoctorCard from "./DoctorCard";
-import { User } from "@/generated/prisma/client";
+import { User } from "@prisma/client";
+
 
 export default function DoctorListCarousel({
   doctors,

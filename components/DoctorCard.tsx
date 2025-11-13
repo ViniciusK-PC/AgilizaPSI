@@ -1,7 +1,8 @@
 import Link from "next/link"
 import Image from "next/image"
 import { Stethoscope, Video } from "lucide-react"
-import { User } from "@/generated/prisma/client";
+import { User } from "@prisma/client";
+
 
 
 
