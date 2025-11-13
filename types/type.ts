@@ -1,4 +1,4 @@
-import { UserRole } from "@prisma/client";
+import { UserRole } from "@/generated/prisma/enums";
 
 export type ServiceProps = {
     title: string;  
