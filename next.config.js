@@ -18,6 +18,12 @@ const nextConfig = {
   images: {
     domains: ['cdn.tailgrids.com'],
   },
+  outputFileTracingIncludes: {
+    '/api/**/*': ['./node_modules/.prisma/client/**/*'],
+    '/*': ['./node_modules/.prisma/client/**/*'],
+  },
 };
+
+
 
 module.exports = withFlowbiteReact(nextConfig);
