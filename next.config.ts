@@ -6,9 +6,6 @@ const config: NextConfig = {
   images: {
     domains: ['cdn.tailgrids.com'],
   },
-  experimental: {
-    serverComponentsExternalPackages: ['@prisma/client', 'prisma'],
-  },
 };
 
 export default withFlowbiteReact(config);
