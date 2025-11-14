@@ -2,14 +2,13 @@
   "name": "agilizapsi",
   "version": "0.1.0",
   "private": true,
-"scripts": {
+  "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate"
   },
-
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
     "@headlessui/react": "^2.2.9",
@@ -30,7 +29,7 @@
     "flowbite-react": "^0.12.10",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.546.0",
-    "next": "16.0.0",
+    "next": "14.2.5",
     "next-auth": "^4.24.13",
     "postcss": "^8.5.6",
     "prisma": "^6.19.0",
