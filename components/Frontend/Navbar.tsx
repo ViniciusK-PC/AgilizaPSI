@@ -4,26 +4,16 @@ import { useState } from 'react'
 import {
   Dialog,
   DialogPanel,
-  Disclosure,
-  DisclosureButton,
-  DisclosurePanel,
-  Popover,
-  PopoverButton,
   PopoverGroup,
-  PopoverPanel,
 } from '@headlessui/react'
 import {
-  ArrowPathIcon,
   Bars3Icon,
-  ChartPieIcon,
-  CursorArrowRaysIcon,
-  FingerPrintIcon,
-  SquaresPlusIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { ChevronDownIcon, PhoneIcon, PlayCircleIcon } from '@heroicons/react/20/solid'
 import MegaMenu from './MegaMenu'
 import Link from 'next/link'
+import Image from 'next/image'
 
 function classNames(...classes: (string | boolean | undefined | null)[]) {
   return classes.filter(Boolean).join("");
@@ -37,7 +27,7 @@ export default function Navbar() {
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 lg:px-8" aria-label="Global">
         <div className="flex lg:flex-1">
           <Link href="/" className="-m-1.5 p-1.5">
-            <span className="sr-only">Sua Compania</span>
+            <span className="sr-only">Psico</span>
             <img
               alt=""
               src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"

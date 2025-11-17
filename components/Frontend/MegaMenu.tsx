@@ -12,12 +12,7 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
-
 } from "@/components/ui/navigation-menu"
-import { title } from "process"
-import { deserialize } from "v8"
-import { Description } from "@headlessui/react"
 import { usePathname } from "next/navigation"
 
 const megaMenu = [

@@ -11,12 +11,13 @@
 // export default withFlowbiteReact(config);
 
 /** @type {import('next').NextConfig} */
-const withFlowbiteReact = require("flowbite-react/plugin/nextjs");
+import withFlowbiteReact from "flowbite-react/plugin/nextjs";
 
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['cdn.tailgrids.com'],
+    domains: ['cdn.tailgrids.com', 'tailwindcss.com'],
+    dangerouslyAllowSVG: true,
   },
   outputFileTracingIncludes: {
     '/api/**/*': ['./node_modules/.prisma/client/**/*'],
@@ -26,4 +27,4 @@ const nextConfig = {
 
 
 
-module.exports = withFlowbiteReact(nextConfig);
+export default withFlowbiteReact(nextConfig);

@@ -43,7 +43,7 @@ export default function LoginForm() {
         setIsLoading(false);
         toast.success("Login realizado com sucesso");
         router.push("/Dashboard");
-      }
+      }  
     } catch (error) {
       setIsLoading(false);
       console.error("Erro de rede:", error);

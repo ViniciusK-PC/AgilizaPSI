@@ -1,8 +1,6 @@
 "use client";
 import { TabItem } from "flowbite-react";
 import { Tabs } from "flowbite-react";
-// import { HiUserCircle } from "react-icons/hi2";
-import { HiAdjustments, HiClipboardList, HiUserCircle } from "react-icons/hi";
 import LinkCards from "./Doctors/LinkCards";
 
 // import { MdDashboard } from "react-icons/md";
