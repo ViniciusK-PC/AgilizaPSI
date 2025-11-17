@@ -1,13 +1,12 @@
 
 
 import { Button } from "@/components/ui/button"
-import { Mail } from "lucide-react"
 import Link from "next/link";
-import { JSXElementConstructor, ReactNode } from "react";
+import { ElementType } from "react";
 
 type CustomButtonProps = {
     title: string;
-    icon?: any;
+    icon?: ElementType;
     href?: string;
     className?: string;
 };

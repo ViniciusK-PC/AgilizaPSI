@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 const brandsData = [
   {
     imageSrc:
@@ -68,11 +70,11 @@ const SingleImage = ({ brand }: SingleImageProps) => {
       href={link}
       className="mx-4 flex w-[150px] items-center justify-center py-5 2xl:w-[180px]"
     >
-      <img src={imageSrc} alt={altText} className="h-10 w-full dark:hidden" />
-      <img
+      <Image width={150} height={40} src={imageSrc} alt={altText} className="h-10 w-full dark:hidden" />
+      <Image
         src={lightImageSrc}
         alt={altText}
-        className="hidden h-10 w-full dark:block"
+        width={150} height={40} className="hidden h-10 w-full dark:block"
       />
     </a>
   );

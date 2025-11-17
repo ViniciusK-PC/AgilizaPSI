@@ -10,11 +10,6 @@ export default function page() {
         "Experiência de prescrição eletrônica perfeita",
         "Gerenciamento de prontuários de pacientes sem complicações",
     ];
-    const steps = [
-        "Crie seu perfil profissional em minutos",
-        "Defina sua disponibilidade e taxas",
-        "Comece a se conectar com novos pacientes",
-    ];
     const cards = [
         {
             title: "Nova Candidatura",
@@ -120,7 +115,7 @@ export default function page() {
                         className="w-full" />
                 </div>
             </section>
-            <section className="py-12 px-4">
+            <section className="py-20 px-4">
                 <div className="max-w-6x1 gap-8 mx-auto grid grid-cols-1 md:grid-cols-2">
 
                     <Image src="/img2.jpg"

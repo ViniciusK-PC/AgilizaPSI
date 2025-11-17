@@ -1,6 +1,7 @@
 
 "use client"
 import { Instagram, Linkedin, Twitter, Youtube } from "lucide-react"
+import Image from "next/image"
 
 
 
@@ -14,15 +15,15 @@ export default function Footer() {
                     name: 'List your Service',
                 },
                 {
-                    href: 'javascript:void()',
+                    href: '#',
                     name: 'Blog'
                 },
                 {
-                    href: 'javascript:void()',
+                    href: '#',
                     name: 'Team'
                 },
                 {
-                    href: 'javascript:void()',
+                    href: '#',
                     name: 'Careers'
                 },
             ],
@@ -31,19 +32,19 @@ export default function Footer() {
             label: "Resources",
             items: [
                 {
-                    href: 'javascript:void()',
+                    href: '/contact',
                     name: 'contact'
                 },
                 {
-                    href: 'javascript:void()',
+                    href: '#',
                     name: 'Support'
                 },
                 {
-                    href: 'javascript:void()',
+                    href: '#',
                     name: 'Docs'
                 },
                 {
-                    href: 'javascript:void()',
+                    href: '/#pricing',
                     name: 'Pricing'
                 },
             ],
@@ -52,19 +53,19 @@ export default function Footer() {
             label: "About",
             items: [
                 {
-                    href: 'javascript:void()',
+                    href: '#',
                     name: 'Terms'
                 },
                 {
-                    href: 'javascript:void()',
+                    href: '#',
                     name: 'License'
                 },
                 {
-                    href: 'javascript:void()',
+                    href: '#',
                     name: 'Privacy'
                 },
                 {
-                    href: 'javascript:void()',
+                    href: '#',
                     name: 'About US'
                 },
             ]
@@ -73,25 +74,25 @@ export default function Footer() {
     const  socialLinks = [
         {
             title:"LinkedIn",
-            href:"https://agiliza-psi.vercel.app/",
+            href:"#",
             icon: Linkedin,
             color:"text-blue-600"
         },
         {
             title:"Youtube",
-            href:"https://agiliza-psi.vercel.app/",
+            href:"#",
             icon: Youtube,
             color:"text-red-600"
         },
         {
             title:"Twitter",
-            href:"https://agiliza-psi.vercel.app/",
+            href:"#",
             icon: Twitter,
             color:"text-blue-400"
         },
         {
             title:"Instagram",
-            href:"https://agiliza-psi.vercel.app/",
+            href:"#",
             icon: Instagram,
             color:"text-pink-600"
         },
@@ -101,9 +102,9 @@ export default function Footer() {
             <div className="gap-6 justify-between md:flex">
                 <div className="flex-1">
                     <div className="max-w-xs">
-                        <img src="https://www.floatui.com/logo.svg" className="w-32" />
+                        <Image alt="AgilizaPSI logo" src="https://www.floatui.com/logo.svg" width={128} height={32} className="w-32" />
                         <p className="leading-relaxed mt-2 text-[15px]">
-                            Lorem Ipsum has been the industry's standard dummy text ever since the 1500s.
+                            Simplificando o acesso à saúde mental. Conectamos pacientes a psicólogos de forma fácil e segura.
                         </p>
                     </div>
                 </div>
@@ -118,8 +119,8 @@ export default function Footer() {
                                     { item.label }
                                 </h4>
                                 {
-                                    item.items.map(((el, idx) => (
-                                        <li key={idx}>
+                                    item.items.map((el => (
+                                        <li key={el.name}>
                                             <a 
                                                 href={el.href}
                                                 className="hover:underline hover:text-indigo-600"
@@ -137,7 +138,7 @@ export default function Footer() {
             </div>
             <div className="mt-8 py-6 border-t items-center justify-between sm:flex">
                 <div className="mt-4 sm:mt-0">
-                    &copy; {new Date().getFullYear()} 2022 Float UI All rights reserved.
+                    &copy; {new Date().getFullYear()} AgilizaPSI. Todos os direitos reservados.
                 </div>|
                 <div className="mt-6 sm:mt-0">
                     <ul className="flex items-center space-x-4">

@@ -1,5 +1,6 @@
 
 import { Pill } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import SearchBar from "./SearchBar";
 import TransitionalText from "./TransitionalText";
@@ -79,9 +80,11 @@ const Hero = () => {
             <div className="w-full px-4 lg:w-5/12">
               <div className="lg:ml-auto lg:text-right">
                 <div className="relative z-10 inline-block pt-11 lg:pt-0">
-                  <img
+                  <Image
                     src="https://cdn.tailgrids.com/assets/images/marketing/hero/hero-image-01.png"
                     alt="hero"
+                    width={500}
+                    height={500}
                     className="max-w-full lg:ml-auto"
                   />
                   <span className="absolute -bottom-8 -left-8 z-[-1]">
@@ -131,13 +134,3 @@ const Hero = () => {
 };
 
 export default Hero;
-
-const SingleImage = ({ href, imgSrc }:{href:string,imgSrc:string}) => {
-  return (
-    <>
-      <a href={href} className="flex w-full items-center justify-center">
-        <img src={imgSrc} alt="brand image" className="h-10 w-full" />
-      </a>
-    </>
-  );
-};

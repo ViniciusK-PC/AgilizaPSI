@@ -1,5 +1,4 @@
 // import ServiceList from "./Services/ServiceList";
-import ServiceList from "./Services/ServiceList";
 import TabbedItems from "./TabbedItems";
 
 const TabbedSection = () => {
@@ -31,4 +30,3 @@ const TabbedSection = () => {
 };
 
 export default TabbedSection;
-

@@ -16,7 +16,7 @@ import withFlowbiteReact from "flowbite-react/plugin/nextjs";
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['cdn.tailgrids.com', 'tailwindcss.com'],
+    domains: ['cdn.tailgrids.com', 'tailwindcss.com', 'www.floatui.com'],
     dangerouslyAllowSVG: true,
   },
   outputFileTracingIncludes: {

@@ -1,14 +1,13 @@
 "use client";
  
 import { zodResolver } from "@hookform/resolvers/zod";
-import { number, z } from "zod";
+import { z } from "zod";
 import { HiInformationCircle } from "react-icons/hi";
 import { Alert } from "flowbite-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import { Loader } from "lucide-react";
 // import { updateUserById } from "@/actions/users";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,7 +40,6 @@ export default function VerifyTokenForm({
   userToken: number | undefined;
   id: string;
 }) {
-  const [loading, setLoading] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   const router = useRouter();
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -52,24 +50,20 @@ export default function VerifyTokenForm({
   });
  
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    setLoading(true);
     const userInputToken = parseInt(data.token);
     if (userInputToken === userToken) {
       setShowNotification(false);
       //Update User
       try {
         await updateUserById(id);
-        setLoading(false);
         // reset();
         toast.success("Account Verified");
         router.push("/login");
       } catch (error) {
-        setLoading(false);
         console.log(error);
       }
     } else {
       setShowNotification(true);
-      setLoading(false);
     }
     console.log(userInputToken);
   }

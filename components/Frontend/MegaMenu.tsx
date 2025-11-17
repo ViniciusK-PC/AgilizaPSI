@@ -17,102 +17,47 @@ import { usePathname } from "next/navigation"
 
 const megaMenu = [
   {
-    title: "Psicólogos",
-    service: [
+    title: "Para Pacientes",
+    services: [
       {
-        title: "Psicólogos",
-        slug: "Psicólogos",
-        description: 
-        "Lorem ipsum dolor sit amet consectetur adipisicing elit. Eaque labore suscipit "
-          + "expedita quisquam explicabo. Asperiores velit sequi natus "
-          + " veniam tenetur, quos, ad culpa distinctio iusto nesciunt maxime, illo itaque est?"
+        title: "Encontrar um Psicólogo",
+        slug: "/search/psicologos",
+        description: "Busque e filtre profissionais por especialidade, localização e mais."
       },
       {
-        title: "Psicólogos",
-        slug: "Psicólogos",
-        deserialize: "",
-        description: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Eaque labore suscipit "
-          + "expedita quisquam explicabo. Asperiores velit sequi natus "
-          + " veniam tenetur, quos, ad culpa distinctio iusto nesciunt maxime, illo itaque est?"
-      },
-      {
-        title: "Psicólogos",
-        slug: "Psicólogos",
-        deserialize: "",
-        description: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Eaque labore suscipit "
-          + "expedita quisquam explicabo. Asperiores velit sequi natus "
-          + " veniam tenetur, quos, ad culpa distinctio iusto nesciunt maxime, illo itaque est?"
-      },
-      {
-        title: "Psicólogos",
-        slug: "Psicólogos",
-        deserialize: "",
-        description: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Eaque labore suscipit "
-          + "expedita quisquam explicabo. Asperiores velit sequi natus "
-          + " veniam tenetur, quos, ad culpa distinctio iusto nesciunt maxime, illo itaque est?"
+        title: "Como Funciona",
+        slug: "/how-it-works",
+        description: "Entenda o processo para agendar sua primeira consulta online."
       },
     ],
   },
   {
-    title: "Especialistas",
-    service: [
+    title: "Para Profissionais",
+    services: [
       {
-        title: "",
-        slug: "",
-        deserialize: "",
-        description: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Eaque labore suscipit "
-          + "expedita quisquam explicabo. Asperiores velit sequi natus "
-          + " veniam tenetur, quos, ad culpa distinctio iusto nesciunt maxime, illo itaque est?"
+        title: "Cadastre-se",
+        slug: "/join/doctors",
+        description: "Junte-se à nossa rede e alcance mais pacientes."
       },
       {
-        title: "",
-        slug: "",
-        deserialize: "",
-        description: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Eaque labore suscipit "
-          + "expedita quisquam explicabo. Asperiores velit sequi natus "
-          + " veniam tenetur, quos, ad culpa distinctio iusto nesciunt maxime, illo itaque est?"
+        title: "Nossos Planos",
+        slug: "/#pricing",
+        description: "Conheça os benefícios e escolha o plano ideal para você."
       },
     ],
   },
   {
-    title: "Especialistas",
-    service: [
+    title: "Recursos",
+    services: [
       {
-        title: ".,çlmkjnhbgf",
-        slug: "l,mknjbhgv",
-        deserialize: "",
-        description: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Eaque labore suscipit "
-          + "expedita quisquam explicabo. Asperiores velit sequi natus "
-          + " veniam tenetur, quos, ad culpa distinctio iusto nesciunt maxime, illo itaque est?"
+        title: "Blog",
+        slug: "/blog",
+        description: "Artigos e dicas sobre saúde mental e bem-estar."
       },
       {
-        title: "",
-        slug: "",
-        deserialize: "",
-        description: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Eaque labore suscipit "
-          + "expedita quisquam explicabo. Asperiores velit sequi natus "
-          + " veniam tenetur, quos, ad culpa distinctio iusto nesciunt maxime, illo itaque est?"
-      },
-    ],
-  },
-   {
-    title: "Especialistas",
-    service: [
-      {
-        title: ".,çlmkjnhbgf",
-        slug: "l,mknjbhgv",
-        deserialize: "",
-        description: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Eaque labore suscipit "
-          + "expedita quisquam explicabo. Asperiores velit sequi natus "
-          + " veniam tenetur, quos, ad culpa distinctio iusto nesciunt maxime, illo itaque est?"
-      },
-      {
-        title: "",
-        slug: "",
-        deserialize: "",
-        description: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Eaque labore suscipit "
-          + "expedita quisquam explicabo. Asperiores velit sequi natus "
-          + " veniam tenetur, quos, ad culpa distinctio iusto nesciunt maxime, illo itaque est?"
+        title: "FAQ",
+        slug: "/faq",
+        description: "Respostas para as perguntas mais frequentes."
       },
     ],
   },
@@ -132,11 +77,11 @@ const pathname = usePathname()
                 <NavigationMenuTrigger>{item.title}</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                    {item.service.map((component) => (
+                    {item.services.map((component) => (
                       <ListItem
                         key={component.title}
                         title={component.title}
-                        href={`/services${component.slug}`}
+                        href={component.slug}
                       >
                         {component.description}
                       </ListItem>
@@ -150,21 +95,26 @@ const pathname = usePathname()
       </NavigationMenuList>
     </NavigationMenu>
   )}
-  function ListItem({
-    title,
-    children,
-    href,
-    ...props
-  }: React.ComponentPropsWithoutRef<"li"> & { href: string }) {
-    return (
-      <li {...props}>
-        <NavigationMenuLink asChild>
-          <Link href={href}>
-            <div className="text-sm leading-none font-medium">{title}</div>
-            <p className="text-muted-foreground line-clamp-2 text-sm leading-snug">
-              {children}
-            </p>
-          </Link>
-        </NavigationMenuLink>
-      </li>
-    )}
+
+const ListItem = React.forwardRef<
+  React.ElementRef<"a">,
+  React.ComponentPropsWithoutRef<"a">
+>(({ className, title, children, ...props }, ref) => {
+  return (
+    <li>
+      <NavigationMenuLink asChild>
+        <a
+          ref={ref}
+          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+          {...props}
+        >
+          <div className="text-sm font-medium leading-none">{title}</div>
+          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+            {children}
+          </p>
+        </a>
+      </NavigationMenuLink>
+    </li>
+  );
+});
+ListItem.displayName = "ListItem"
