@@ -1,71 +1,97 @@
-import { BarChart, Folder, Grid2X2, Home, Settings } from "lucide-react";
+
+
+"use client";
+
+
+import { Bell, Home,
+  Package, Package2, ShoppingCart, TrendingUp, Users, Settings } from "lucide-react";
 import Link from "next/link";
-import { Button } from "flowbite-react";
-import LogoutButton from "./LogoutButton";
-import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
+import { useState } from "react"
+import { cn } from "@/lib/utils";
+import { Badge } from "../ui/badge";
+import { useRouter } from "next/navigation";
+
+
+
  
-export default async function Sidebar() {
-  return (
-    <div className="hidden xl:flex xl:w-64 xl:flex-col border-r border-gray-300">
-      <div className="flex flex-col pt-5 overflow-y-auto">
-        <div className="flex flex-col justify-between flex-1 h-full px-4">
-          <div className="space-y-4">
-            <div>
-              <Button
-                outline={true}
-                className="inline-flex items-center justify-center w-full px-4 py-3 text-sm font-semibold leading-5 text-white transition-all duration-200 bg-blue-600 border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 hover:bg-blue-500 hover:text-slate-50"
+export default function Sidebar() {
+ 
+  
+const router = useRouter()
+  const [activeTab, setActiveTab] = useState("dashboard")
+    
+      const navItems = [
+        { id: "dashboard", label: "Dashboard", icon: Home, href:"/dashboard"},
+        { id: "products", label: "Products", icon: Package, href:"/dashboard/products"},
+        { id: "orders", label: "Orders", icon: ShoppingCart, badge: 6, href:"/dashboard/orders"},
+        { id: "customers", label: "Customers", icon: Users, href:"/"},
+        { id: "analytics", label: "Analytics", icon: TrendingUp, href:"/"},
+        { id: "settings", label: "Settings", icon: Settings, href:"/dashboard/settings"},   
+      
+      ]
+    return (
+    <div className="flex h-screen bg-background">
+      <aside className="w-72 border-r border-border bg-background flex flex-col">
+            <div className="flex h-16 items-center border-b px-4 lg:h-[60] lg:px-6">
+            <Link href="#" className="flex items-center gap-2 font-semibold">
+           
+            <Package2 className="h-6 w-6"/>
+             <span className="font-semibold text-lg">Acme Inc</span>
+            </Link>
+            <Button variant="outline" size="icon" className="ml-auto h-8 w-8">
+              <Bell className="h-4 w-4" />
+              <span className="sr-only">Toogle notifications</span>
+            </Button>
+           </div>
+          
+        <nav className="flex-1 p-4 space-y-1">
+          {navItems.map((item) => {
+            const Icon = item.icon
+            return (              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveTab(item.id)
+                  router.push(`${item.href}`)
+                }}
+                
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors relative",
+                  activeTab === item.id
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
               >
-                <Plus className="w-5 h-5 mr-1" />
-                Create Product
+                <Icon className="w-5 h-5" />
+                <span>{item.label}</span>
+                {item.badge && (
+                  <Badge className="ml-auto bg-foreground text-background">
+                    {item.badge}
+                  </Badge>
+                )}
+              </button>
+            )
+          })}
+        </nav>
+
+        {/* Upgrade Card */}
+        <div className="p-4">
+          <Card className="border-2">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Upgrade to Pro</CardTitle>
+              <CardDescription className="text-sm leading-relaxed">
+                Unlock all features and get unlimited access to our support team.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button className="w-full bg-foreground text-background hover:bg-foreground/90">
+                Upgrade
               </Button>
-            </div>
-            <div>
-              <p className="px-4 text-xs font-semibold tracking-widest text-gray-400 uppercase">
-                Analytics
-              </p>
-              <nav className="flex-1 mt-4 space-y-1">
-                <Link
-                  href="/dashboard"
-                  className="flex items-center px-4 py-2.5 text-sm font-medium transition-all duration-200 text-gray-900 rounded-lg hover:bg-gray-200 group"
-                >
-                  <Home className="flex-shrink-0 w-5 h-5 mr-4" />
-                  Dashboard
-                </Link>
-                <Link
-                  href="/dashboard/categories"
-                  title="categories"
-                  className="flex items-center px-4 py-2.5 text-sm font-medium transition-all duration-200 text-gray-900 rounded-lg hover:bg-gray-200 group"
-                >
-                  <Grid2X2 className="flex-shrink-0 w-5 h-5 mr-4" />
-                  Categories
-                </Link>
-                <Link
-                  href="/dashboard/products"
-                  className="flex items-center px-4 py-2.5 text-sm font-medium transition-all duration-200 text-gray-900 rounded-lg hover:bg-gray-200 group"
-                >
-                  <Folder className="flex-shrink-0 w-5 h-5 mr-4" />
-                  Products
-                </Link>
-              </nav>
-            </div>
-          </div>
- 
-          <div className="pb-4 mt-12">
-            <nav className="flex-1 space-y-1">
-              <Link
-                href="#"
-                title=""
-                className="flex items-center px-4 py-2.5 text-sm font-medium transition-all duration-200 text-gray-900 rounded-lg hover:bg-gray-200 group"
-              >
-                <Settings className="flex-shrink-0 w-5 h-5 mr-4" />
-                Settings
-              </Link>
- 
-              <LogoutButton />
-            </nav>
-          </div>
+            </CardContent>
+          </Card>
         </div>
-      </div>
+      </aside>
     </div>
   );
 }

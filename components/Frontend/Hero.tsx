@@ -1,9 +1,10 @@
 
-import { Pill } from "lucide-react";
+import { Command, Pill } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import SearchBar from "./SearchBar";
+// import SearchBar from "./SearchBar";
 import TransitionalText from "./TransitionalText";
+import { CommandMenu } from "../command-menu";
 
 
 const Hero = () => {
@@ -17,9 +18,8 @@ const Hero = () => {
           <div className="-mx-4 flex flex-wrap">
             <div className="w-full px-4 lg:w-6/12">
               <div className="hero-content">
-                <h1 className="mb-5 text-4xl font-bold leading-[1.208]
-                 text-gray-50 dark:text-white sm:text-[42px] 
-                 lg:text-[40px] xl:text-5xl flex flex-wrap items-center gap-3">
+                <h1 className="scroll-m-20 text-4xl font-extrabold
+                tracking-tight lg:text-5xl">
                   <span>Reserve sua </span> 
                   <TransitionalText className="text-blue-500" TEXTS=
                   {TEXTS}/>
@@ -31,7 +31,10 @@ const Hero = () => {
                   lhe oferecer assistência médica simples, acessível e transparente.
                 </p>
                 {/* SEARCH BAR HERE */}
-                <SearchBar />
+                {/* <SearchBar /> */}
+                <div className="w-full flex-1 md:flex-none">
+                  <CommandMenu />
+                </div>
                 {/* CTA BTNS */}
                 <ul className="flex flex-wrap items-center mt-6">
                   <li>
