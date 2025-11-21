@@ -37,6 +37,9 @@ export function useTabSession() {
   });
 
   useEffect(() => {
+    // Só executar no cliente
+    if (typeof window === "undefined") return;
+
     // Verificar sessionStorage imediatamente (já está disponível)
     const savedTabSession = getTabSession();
     setTabSession(savedTabSession);

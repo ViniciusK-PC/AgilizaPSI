@@ -32,27 +32,34 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // Verificar autenticação imediatamente (sem delay)
-    // O sessionStorage já está disponível através do hook useTabSession
+    // Só executar verificações após montagem completa
+    if (status === 'loading') return;
+
+    // Verificar autenticação
     if (!isAuthenticated && status === 'unauthenticated') {
       router.push('/login');
       return;
     }
 
+    // Só verificar redirecionamentos se estiver autenticado
+    if (!isAuthenticated) return;
+
     // Verificar redirecionamentos baseados em role
     const userRole = activeSession?.user?.role;
 
     // Verificar se esta guia de admin perdeu o lock (outra guia fez login como admin)
-    if (userRole === 'ADMIN' && isOtherTabAdmin() && !hasAdminLock()) {
-      clearCurrentAdminSession();
-      return;
+    if (userRole === 'ADMIN' && typeof window !== 'undefined') {
+      if (isOtherTabAdmin() && !hasAdminLock()) {
+        clearCurrentAdminSession();
+        return;
+      }
     }
 
     // Se for admin e tentar acessar dashboard normal, redirecionar para admin
     if (userRole === 'ADMIN' && !isAdminRoute) {
-      if (hasAdminLock()) {
+      if (typeof window !== 'undefined' && hasAdminLock()) {
         router.push('/dashboard/admin');
-      } else if (isOtherTabAdmin()) {
+      } else if (typeof window !== 'undefined' && isOtherTabAdmin()) {
         router.push('/login');
       }
       return;
@@ -65,18 +72,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }
     
     // Se tentar acessar rota admin mas outra guia tem o lock, redirecionar para login
-    if (isAdminRoute && userRole === 'ADMIN' && !hasAdminLock() && isOtherTabAdmin()) {
-      router.push('/login');
-      return;
+    if (isAdminRoute && userRole === 'ADMIN' && typeof window !== 'undefined') {
+      if (!hasAdminLock() && isOtherTabAdmin()) {
+        router.push('/login');
+        return;
+      }
     }
   }, [isAuthenticated, status, router, isAdminRoute, activeSession]);
 
-  // Verificar sessionStorage imediatamente (já está disponível no hook)
-  // Não mostrar loading se já temos sessão no sessionStorage ou cookie
-  const hasSession = isAuthenticated || tabSession || session;
-  
-  // Mostrar loading apenas se realmente estiver carregando e não houver sessão
-  if (status === 'loading' && !hasSession) {
+  // Mostrar loading apenas se realmente estiver carregando
+  if (status === 'loading') {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="text-center">

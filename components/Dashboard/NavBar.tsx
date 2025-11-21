@@ -44,12 +44,20 @@ export default function Navbar() {
     await signOut({ callbackUrl: "/" });
   }
   
+  // Sempre renderizar o header para evitar problemas de hidratação
+  // O conteúdo interno pode mudar após montagem
   return (
     <header className="h-16 border-b border-border flex items-center justify-end px-6 bg-background">
       <div className="flex items-center gap-3">
         <ModeToggle/>
-        {mounted && <SessionSwitcher />}
-        {mounted ? (isAdmin ? <AdminProfile /> : <UserProfile />) : <UserProfile />}
+        {mounted ? (
+          <>
+            <SessionSwitcher />
+            {isAdmin ? <AdminProfile /> : <UserProfile />}
+          </>
+        ) : (
+          <UserProfile />
+        )}
         <Button 
           variant="ghost" 
           size="icon" 

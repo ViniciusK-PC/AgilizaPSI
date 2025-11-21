@@ -18,9 +18,8 @@ export default function DashboardPage() {
   const activeSession = tabSession || session;
 
   useEffect(() => {
-    // Verificar role imediatamente (sem delay)
-    // O sessionStorage já está disponível através do hook useTabSession
-    if (!isAuthenticated) return;
+    // Só executar se estiver autenticado
+    if (!isAuthenticated || status === 'loading') return;
     
     const userRole = activeSession?.user?.role;
     
@@ -28,7 +27,19 @@ export default function DashboardPage() {
     if (userRole === 'ADMIN') {
       router.push('/dashboard/admin');
     }
-  }, [isAuthenticated, activeSession, router]);
+  }, [isAuthenticated, activeSession, router, status]);
+
+  // Mostrar loading enquanto verifica
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+          <p className="text-gray-600 dark:text-gray-400 text-sm">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Se for admin, não renderizar nada (será redirecionado)
   if (isAuthenticated && activeSession?.user?.role === 'ADMIN') {
