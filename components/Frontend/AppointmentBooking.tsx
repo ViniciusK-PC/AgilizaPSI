@@ -19,6 +19,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Clock, User, Video, MapPin, Phone, Mail } from "lucide-react";
 import { useCreateAppointment } from "@/hooks/useAppointments";
+import { useSession } from "next-auth/react";
+import { useTabSession } from "@/hooks/useTabSession";
 
 const validationSchema = Yup.object({
   psychologistId: Yup.string().required("Selecione um psicólogo"),
@@ -46,8 +48,14 @@ export default function AppointmentBooking({
 }: AppointmentBookingProps) {
   const router = useRouter();
   const createAppointment = useCreateAppointment();
+  const { data: session } = useSession();
+  const { session: tabSession } = useTabSession();
   const [selectedDate, setSelectedDate] = useState(initialDate || "");
   const [selectedPsychologistId, setSelectedPsychologistId] = useState(initialPsychologistId || "");
+  
+  // Usar sessão da guia (sessionStorage) se disponível, senão usar sessão do NextAuth (cookie)
+  const activeSession = tabSession || session;
+  const patientId = activeSession?.user?.id;
 
   // Buscar psicólogos
   const { data: psychologists = [], isLoading: loadingPsychologists } = useQuery({
@@ -105,11 +113,11 @@ export default function AppointmentBooking({
         return;
       }
 
-      // Criar agendamento (sem patientId, será vinculado depois do login/cadastro)
+      // Criar agendamento vinculando o paciente autenticado
       try {
         await createAppointment.mutateAsync({
           psychologistId: values.psychologistId,
-          patientId: null, // Será vinculado depois
+          patientId: patientId || null, // Vincular o paciente autenticado
           date: new Date(values.date),
           startTime: values.startTime,
           endTime: selectedSlot.endTime,

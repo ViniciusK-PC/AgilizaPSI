@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAppointment, getAppointments } from "@/actions/appointments";
 import { CreateAppointmentProps, AppointmentFilterProps } from "@/types/type";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 // POST - Criar novo agendamento
 export async function POST(request: NextRequest) {
@@ -33,6 +35,7 @@ export async function POST(request: NextRequest) {
 // GET - Listar agendamentos com filtros
 export async function GET(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
     const searchParams = request.nextUrl.searchParams;
     
     const filters: AppointmentFilterProps = {
@@ -43,6 +46,11 @@ export async function GET(request: NextRequest) {
       dateFrom: searchParams.get("dateFrom") || undefined,
       dateTo: searchParams.get("dateTo") || undefined,
     };
+
+    // Se for um psicólogo logado e não houver psychologistId nos filtros, filtrar automaticamente pelo psicólogo logado
+    if (session?.user?.role === "PSICOLOGO" && !filters.psychologistId && session.user.id) {
+      filters.psychologistId = session.user.id;
+    }
 
     // Remove campos undefined
     Object.keys(filters).forEach(
