@@ -1,4 +1,4 @@
-import { UserRole } from "@/generated/prisma";
+import { UserRole } from "@prisma/client";
 import type { User } from "next-auth";
 import "next-auth/jwt";
 type UserId = string;
@@ -7,6 +7,10 @@ declare module "next-auth/jwt" {
   interface JWT {
     id: UserId;
     role: UserRole;
+    name?: string;
+    email?: string;
+    picture?: string | null;
+    hasImage?: boolean;
   }
 }
  

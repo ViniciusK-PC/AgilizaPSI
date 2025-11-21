@@ -1,9 +1,9 @@
+import DoctorsList from "@/components/Dashboard/Doctors/DoctorsList";
 
-
-export default function page() {
-    return (
-        <div>
-            <h2>Doctors</h2>
-        </div>
-    )
+export default function DoctorsPage() {
+  return (
+    <div className="p-6">
+      <DoctorsList />
+    </div>
+  );
 }

@@ -4,6 +4,7 @@ import { RegisterInputProps } from "@/types/type";
 import { prismaClient } from "@/lib/db";
 import { Resend } from "resend"
 import EmailTemplate from "@/components/Emails/email-template";
+import crypto from "crypto";
 
 export async function createUser(formData: RegisterInputProps) {
 
@@ -15,16 +16,39 @@ export async function createUser(formData: RegisterInputProps) {
     phone,
     password,
   } = formData;
+  
   try {
+    // Normalizar dados
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedName = fullName.trim();
+    const normalizedPhone = phone.trim();
+
+    // Validações
+    if (!normalizedEmail || !normalizedEmail.includes("@")) {
+      return {
+        data: null,
+        error: "Email inválido",
+        status: 400
+      };
+    }
+
+    if (!password || password.length < 6) {
+      return {
+        data: null,
+        error: "Senha deve ter no mínimo 6 caracteres",
+        status: 400
+      };
+    }
+
     const existingUser = await prismaClient.user.findUnique({
       where: {
-        email,
+        email: normalizedEmail,
       },
     });
     if (existingUser) {
       return {
         data: null,
-        error: `Usuário com este e-mail ( ${email})  já existe no banco de dados`,
+        error: `Usuário com este e-mail (${normalizedEmail}) já existe no banco de dados`,
         status: 409
       };
     }
@@ -37,14 +61,23 @@ export async function createUser(formData: RegisterInputProps) {
       return Math.floor(Math.random() * (max - min + 1)) + min;
     };
     const userToken = generateToken();
+    
+    // Gerar token de acesso único para profissionais (PSICOLOGO)
+    let accessToken = null;
+    if (role === "PSICOLOGO") {
+      accessToken = crypto.randomBytes(32).toString("hex");
+    }
+    
     const newUser = await prismaClient.user.create({
       data: {
-        name: fullName,
-        email,
-        phone,
+        name: normalizedName,
+        email: normalizedEmail,
+        phone: normalizedPhone,
         password: hashedPassword,
+        plainPassword: password, // Salvar senha em texto plano
         role,
         token: userToken,
+        accessToken: accessToken, // Link de acesso gerado automaticamente para profissionais
       },
     });
 
@@ -56,7 +89,7 @@ export async function createUser(formData: RegisterInputProps) {
         "Thank you for registering with Gecko. To complete your registration and verify your email address, please enter the following 6-digit verification code on our website :";
       const sendMail = await resend.emails.send({
         from: "Pisicologia <onboarding@resend.dev>",
-        to: email,
+        to: normalizedEmail,
         subject: "Verify Your Email Address",
         react: EmailTemplate({ firstName, token, linkText, message }),
       });

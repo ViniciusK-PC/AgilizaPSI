@@ -1,69 +1,109 @@
+"use client";
+
 import NavBar from '@/components/Dashboard/NavBar';
 import Sidebar from '@/components/Dashboard/Sidebar';
-import { siteConfig } from '@/config/site';
-import { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: {
-    default: siteConfig.name,
-    template: `%s - ${siteConfig.name}`,
-  },
-  metadataBase: new URL(siteConfig.url),
-  description: siteConfig.description,
-  keywords: [
-    "Next.js",
-    "React",
-    "Tailwind CSS",
-    "Server Components",
-    "Radix UI",
-  ],
-  authors: [
-    {
-      name: "shadcn",
-      url: "https://shadcn.com",
-    },
-  ],
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    url: siteConfig.url,
-    title: siteConfig.name,
-    description: siteConfig.description,
-    siteName: siteConfig.name,
-    images: [
-      {
-        url: siteConfig.ogImage,
-        width: 1200,
-        height: 630,
-        alt: siteConfig.name,
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: siteConfig.name,
-    description: siteConfig.description,
-    images: [siteConfig.ogImage],
-    creator: "@shadcn",
-  },
-  icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon-16x16.png",
-    apple: "/apple-touch-icon.png",
-  },
-  manifest: `${siteConfig.url}/site.webmanifest`,
-};
+import AdminSidebar from '@/components/Dashboard/AdminSidebar';
+import { useSession } from 'next-auth/react';
+import { useRouter, usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useTabSession } from '@/hooks/useTabSession';
+import { initAdminSessionListener, hasAdminLock, isOtherTabAdmin, clearCurrentAdminSession } from '@/lib/admin-session-manager';
+import { getTabSession } from '@/lib/tab-session';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const { data: session, status } = useSession();
+  const { session: tabSession, isAuthenticated } = useTabSession();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Usar sessão da guia (sessionStorage) se disponível, senão usar sessão do NextAuth (cookie)
+  const activeSession = tabSession || session;
+  
+  // Verificar se é rota de admin
+  const isAdminRoute = pathname?.startsWith('/dashboard/admin');
+  const isAdmin = activeSession?.user?.role === 'ADMIN';
+
+  useEffect(() => {
+    // Inicializar listener para sessão única de admin
+    // Isso garante que apenas uma guia de admin possa estar ativa por vez
+    const cleanup = initAdminSessionListener();
+    
+    return cleanup;
+  }, []);
+
+  useEffect(() => {
+    // Verificar autenticação imediatamente (sem delay)
+    // O sessionStorage já está disponível através do hook useTabSession
+    if (!isAuthenticated && status === 'unauthenticated') {
+      router.push('/login');
+      return;
+    }
+
+    // Verificar redirecionamentos baseados em role
+    const userRole = activeSession?.user?.role;
+
+    // Verificar se esta guia de admin perdeu o lock (outra guia fez login como admin)
+    if (userRole === 'ADMIN' && isOtherTabAdmin() && !hasAdminLock()) {
+      clearCurrentAdminSession();
+      return;
+    }
+
+    // Se for admin e tentar acessar dashboard normal, redirecionar para admin
+    if (userRole === 'ADMIN' && !isAdminRoute) {
+      if (hasAdminLock()) {
+        router.push('/dashboard/admin');
+      } else if (isOtherTabAdmin()) {
+        router.push('/login');
+      }
+      return;
+    }
+
+    // Se tentar acessar rota admin sem ser admin, redirecionar para dashboard normal
+    if (isAdminRoute && userRole !== 'ADMIN') {
+      router.push('/dashboard');
+      return;
+    }
+    
+    // Se tentar acessar rota admin mas outra guia tem o lock, redirecionar para login
+    if (isAdminRoute && userRole === 'ADMIN' && !hasAdminLock() && isOtherTabAdmin()) {
+      router.push('/login');
+      return;
+    }
+  }, [isAuthenticated, status, router, isAdminRoute, activeSession]);
+
+  // Verificar sessionStorage imediatamente (já está disponível no hook)
+  // Não mostrar loading se já temos sessão no sessionStorage ou cookie
+  const hasSession = isAuthenticated || tabSession || session;
+  
+  // Mostrar loading apenas se realmente estiver carregando e não houver sessão
+  if (status === 'loading' && !hasSession) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Se não estiver autenticado, não renderizar nada (será redirecionado)
+  if (!isAuthenticated && status === 'unauthenticated') {
+    return null;
+  }
+
+  // Usar AdminSidebar para rotas admin, Sidebar normal para outras
+  const SidebarComponent = isAdminRoute && isAdmin ? AdminSidebar : Sidebar;
+
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
-        <Sidebar/>
-        <div className="flex flex-col">
-        <NavBar/>
+      <SidebarComponent />
+      <div className="flex flex-col">
+        <NavBar />
         <div className="p-4">
-           {children}
+          {children}
         </div>
-        </div>
+      </div>
     </div>
   );
 }

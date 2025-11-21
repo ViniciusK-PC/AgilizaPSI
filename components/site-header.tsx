@@ -1,107 +1,33 @@
-// import Link from "next/link"
-
-// import { siteConfig } from "@/config/site";
-
-// import { CommandMenu } from "@/components/command-menu";
-// import { Icons } from "@/components/icons";
-// import { MainNav } from "@/components/main-nav";
-// import { MobileNav } from "@/components/mobile-nav";
-// import { Button } from "@/components/ui/button";
-// import { Separator } from "@/components/ui/separator";
-// import { ModeToggle } from "@/components/ModeToggle";
-// import { source } from "@/lib/source";
-
-
-// export function SiteHeader() {
-
-//   return (
-//     <header className="bg-background sticky top-0 z-50 w-full">
-//       <div className="container-wrapper 3xl:fixed:px-0 px-6">
-//         <div className="3xl:fixed:container flex h-(--header-height) items-center **:data-[slot=separator]:!h-4">
-//           <MobileNav
-//           tree={source.pageTree}
-//           items={siteConfig.navItems}
-//           className="flex lg:hidden"
-//         />
-//           <Button
-//             asChild
-//             variant="ghost"
-//             size="icon"
-//             className="hidden size-8 lg:flex"
-//           >
-//             <Link href="/">
-//               <Icons.logo className="size-5" />
-//               <span className="sr-only">{siteConfig.name}</span>
-//             </Link>
-//           </Button>
-//           <MainNav items={siteConfig.navItems} className="hidden lg:flex" />
-//           <div className="ml-auto flex items-center gap-2 md:flex-1 md:justify-end">
-//             <div className="hidden w-full flex-1 md:flex md:w-auto md:flex-none">
-//               <CommandMenu />
-//             </div>
-//             <Separator
-//               orientation="vertical"
-//               className="ml-2 hidden lg:block"
-//             />
-//             <Button asChild variant="ghost" size="icon">
-//               <Link href={siteConfig.links.github} target="_blank" rel="noopener noreferrer">
-//                 <Icons.gitHub className="size-4" />
-//                 <span className="sr-only">GitHub</span>
-//               </Link>
-//             </Button>
-//             <Separator orientation="vertical" />
-//             <ModeToggle />
-//           </div>
-//         </div>
-//       </div>
-//     </header>
-//   )
-// }
 'use client'
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Menu, X, Moon, Sun, Search, Github, Mail, LogInIcon, LogIn } from 'lucide-react'
+import { Menu, X, LogIn, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { ModeToggle } from './ModeToggle'
-import { CommandMenu } from './command-menu'
+import { useSession, signOut } from 'next-auth/react'
+import { ModeToggle } from '@/components/ModeToggle'
 
 export function SiteHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [darkMode, setDarkMode] = useState(false)
-
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode)
-    if (darkMode) {
-      document.documentElement.classList.remove('dark')
-    } else {
-      document.documentElement.classList.add('dark')
-    }
-  }
+  const { data: session } = useSession()
 
   const navItems = [
-    { label: 'Docs', href: '#' },
-    { label: 'Components', href: '#' },
-    { label: 'Themes', href: '#' },
-    { label: 'Examples', href: '#' },
-    { label: 'Blocks', href: '#' },
-    { label: 'GitHub', href: '#' },
+    { label: 'Início', href: '/' },
+    { label: 'Sobre', href: '/#about' },
+    { label: 'Serviços', href: '/#services' },
+    { label: 'Psicólogos', href: '/#doctors' },
   ]
 
-  const commandItems = navItems.map(item => ({
-    label: item.label,
-    href: item.href,
-    group: 'Navigation'
-  }))
-
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 border-b border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-950/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-gray-950/60 shadow-sm">
       <div className="flex h-16 items-center justify-between px-4 max-w-screen-2xl mx-auto">
         {/* Logo */}
-        <Link href="#" className="flex items-center gap-2 font-bold text-lg">
-          <div className="flex items-center gap-1">
-            <span>/</span>
-            <span>shadcn/ui</span>
+        <Link href="/" className="flex items-center gap-2 font-bold text-xl text-blue-950 dark:text-blue-400">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-blue-600 dark:bg-blue-500 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold">A</span>
+            </div>
+            <span className="hidden sm:inline">AgilizaPSI</span>
           </div>
         </Link>
 
@@ -111,7 +37,7 @@ export function SiteHeader() {
             <Link
               key={item.label}
               href={item.href}
-              className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-accent hover:bg-opacity-50"
+              className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-md hover:bg-blue-50 dark:hover:bg-blue-950/50"
             >
               {item.label}
             </Link>
@@ -120,34 +46,35 @@ export function SiteHeader() {
 
         {/* Right Section */}
         <div className="flex items-center gap-2 md:gap-4">
-          {/* Search */}
-          <div className="hidden md:flex">
-            <CommandMenu items={commandItems} />
-          </div>
-
-          {/* Social Icons */}
-
-          <Button asChild>
-  <Link href="/login">
-    <LogIn className="mr-2 h-4 w-4" /> Login
-  </Link>
-</Button>
-
-  
-
-          {/* Dark Mode Toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="w-9 h-9"
-            onClick={toggleDarkMode}
-          >
-            {darkMode ? (
-              <Sun className="w-4 h-4" />
-            ) : (
-              <Moon className="w-4 h-4" />
-            )}
-          </Button>
+          {/* Theme Toggle */}
+          <ModeToggle />
+          
+          {session ? (
+            <>
+              <Button asChild variant="outline">
+                <Link href="/dashboard">
+                  <User className="mr-2 h-4 w-4" />
+                  Dashboard
+                </Link>
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => signOut({ callbackUrl: '/' })}
+                className="text-sm"
+              >
+                Sair
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button asChild>
+                <Link href="/login">
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Login
+                </Link>
+              </Button>
+            </>
+          )}
 
           {/* Mobile Menu Button */}
           <Button
@@ -167,17 +94,30 @@ export function SiteHeader() {
 
       {/* Mobile Navigation */}
       {mobileMenuOpen && (
-        <nav className="md:hidden border-t border-border bg-background px-4 py-4 space-y-2">
+        <nav className="md:hidden border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 px-4 py-4 space-y-2">
           {navItems.map((item) => (
             <Link
               key={item.label}
               href={item.href}
-              className="block px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-accent hover:bg-opacity-50"
+              className="block px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-md hover:bg-blue-50 dark:hover:bg-blue-950/50"
+              onClick={() => setMobileMenuOpen(false)}
             >
               {item.label}
             </Link>
           ))}
-          <ModeToggle/>
+          <div className="pt-2 border-t border-gray-200 dark:border-gray-800">
+            <ModeToggle />
+          </div>
+          {!session && (
+            <div className="pt-4 border-t border-gray-200 dark:border-gray-800 space-y-2">
+              <Button asChild variant="outline" className="w-full">
+                <Link href="/login">
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Login
+                </Link>
+              </Button>
+            </div>
+          )}
         </nav>
       )}
     </header>

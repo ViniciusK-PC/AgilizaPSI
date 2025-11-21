@@ -1,11 +1,9 @@
-import Settings from "@/components/Dashboard/Settings/Settings";
-
+import PsychologistSettingsForm from "@/components/Dashboard/Settings/PsychologistSettingsForm";
 
 export default function Page() {
-
   return (
-    <div className=''>
-        <Settings/>
+    <div className="p-6">
+      <PsychologistSettingsForm />
     </div>
-  )
+  );
 }

@@ -98,7 +98,7 @@ export default function Footer() {
         },
     ];
     return (
-        <footer className="text-gray-500 bg-white px-4 py-5 max-w-screen-xl mx-auto md:px-8">
+        <footer className="text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-950 px-4 py-5 max-w-screen-xl mx-auto md:px-8">
             <div className="gap-6 justify-between md:flex">
                 <div className="flex-1">
                     <div className="max-w-xs">
@@ -115,7 +115,7 @@ export default function Footer() {
                                 className="space-y-4"
                                 key={idx}
                             >
-                                <h4 className="text-gray-800 font-medium">
+                                <h4 className="text-gray-800 dark:text-gray-200 font-medium">
                                     { item.label }
                                 </h4>
                                 {
@@ -123,8 +123,7 @@ export default function Footer() {
                                         <li key={el.name}>
                                             <a 
                                                 href={el.href}
-                                                className="hover:underline hover:text-indigo-600"
-                                            
+                                                className="hover:underline hover:text-indigo-600 dark:hover:text-indigo-400"
                                             >
                                                 { el.name }
                                             </a>
@@ -136,17 +135,17 @@ export default function Footer() {
                     }
                 </div>
             </div>
-            <div className="mt-8 py-6 border-t items-center justify-between sm:flex">
+            <div className="mt-8 py-6 border-t border-gray-200 dark:border-gray-800 items-center justify-between sm:flex">
                 <div className="mt-4 sm:mt-0">
                     &copy; {new Date().getFullYear()} AgilizaPSI. Todos os direitos reservados.
-                </div>|
+                </div>
                 <div className="mt-6 sm:mt-0">
                     <ul className="flex items-center space-x-4">
                       {
                         socialLinks.map((item,i)=>{
                             const Icon = item.icon
                             return(
-                                <li key={i} className="w-10 h-10 border rounded-full flex items-center justify-center">
+                                <li key={i} className="w-10 h-10 border border-gray-200 dark:border-gray-800 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                             <a href={item.href} className={item.color}>
                                 <Icon className="w-6 h-6" />
                             </a>

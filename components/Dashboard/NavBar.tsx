@@ -1,51 +1,65 @@
 
 "use client";
 
-import { useRouter } from "next/navigation";
-import {  Search, User } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { ModeToggle } from "../ModeToggle";
-
-
+import UserProfile from "./UserProfile";
+import AdminProfile from "./AdminProfile";
+import SessionSwitcher from "./SessionSwitcher";
+import { signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { useTabSession } from "@/hooks/useTabSession";
+import { clearTabSession } from "@/lib/tab-session";
+import { clearAdminLock, hasAdminLock } from "@/lib/admin-session-manager";
+import { useEffect, useState } from "react";
 
 export default function Navbar() {
-  const router = useRouter();
-  async function handleLogout() {   
-    router.push("/");
-  }
-  return (
+  const { data: session } = useSession();
+  const { session: tabSession } = useTabSession();
+  const [mounted, setMounted] = useState(false);
+  
+  // Garantir que só use sessionStorage após hidratação
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  // Durante SSR e hidratação inicial, usar apenas session do NextAuth
+  // Após hidratação, usar sessionStorage se disponível
+  const activeSession = mounted ? (tabSession || session) : session;
+  const isAdmin = activeSession?.user?.role === "ADMIN";
+
+  async function handleLogout() {
+    // Se for admin, limpar o lock de sessão única
+    if (isAdmin && hasAdminLock()) {
+      clearAdminLock();
+    }
     
-         <header className="h-16 border-b border-border flex items-center justify-between px-6 bg-background">
-          <div className="flex items-center gap-4 flex-1 max-w-xl">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search products..." 
-                className="pl-9 bg-muted/50 border-0 max-w-80"
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <DropdownMenu>
-              <ModeToggle/>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
-                  <User className="w-5 h-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </header> 
- 
+    // Limpar sessão da guia atual (sessionStorage)
+    // Isso não afeta outras guias que têm suas próprias sessões
+    clearTabSession();
+    
+    // Fazer logout do NextAuth (limpa cookie compartilhado)
+    // Mas outras guias ainda terão suas sessões no sessionStorage
+    await signOut({ callbackUrl: "/" });
+  }
+  
+  return (
+    <header className="h-16 border-b border-border flex items-center justify-end px-6 bg-background">
+      <div className="flex items-center gap-3">
+        <ModeToggle/>
+        {mounted && <SessionSwitcher />}
+        {mounted ? (isAdmin ? <AdminProfile /> : <UserProfile />) : <UserProfile />}
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="rounded-full"
+          onClick={handleLogout}
+          title="Sair do sistema"
+        >
+          <LogOut className="w-5 h-5" />
+        </Button>
+      </div>
+    </header> 
   );
 }

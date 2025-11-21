@@ -8,11 +8,14 @@ import SubmitButton from "../FormInputs/SubmiButton";
 import toast from "react-hot-toast";
 import { useRouter } from 'next/navigation';
 import { signIn } from "next-auth/react"
+import { saveTabSession } from "@/lib/tab-session";
+import { lockAdminSession, clearAdminLock, isOtherTabAdmin } from "@/lib/admin-session-manager";
 
 export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [showNotification, setShowNotification] = useState(false)
   const router = useRouter()
+  
   const {
     register,
     handleSubmit,
@@ -24,6 +27,45 @@ export default function LoginForm() {
     try {
       setIsLoading(true);
       console.log("Tentando iniciar sessão com as credenciais.:", data);
+      
+      // Primeiro, validar credenciais e salvar no sessionStorage ANTES do signIn
+      // Isso permite que cada guia mantenha sua própria sessão
+      try {
+        const validateResponse = await fetch("/api/auth/validate-credentials", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+
+        if (validateResponse.ok) {
+          const userData = await validateResponse.json();
+          
+          // Se for admin, verificar se outra guia já tem sessão de admin ativa
+          if (userData.user.role === "ADMIN") {
+            // Se outra guia já tem sessão de admin, limpar ela primeiro
+            if (isOtherTabAdmin()) {
+              // Limpar o lock anterior (outra guia será notificada)
+              clearAdminLock();
+            }
+            
+            // Bloquear sessão de admin para esta guia
+            lockAdminSession(userData.user.id, userData.user.email);
+          }
+          
+          // Salvar sessão no sessionStorage ANTES de fazer signIn
+          // Isso permite que cada guia mantenha sua própria sessão independente
+          saveTabSession({
+            id: `tab_${Date.now()}_${userData.user.id}`,
+            email: userData.user.email,
+            name: userData.user.name,
+            role: userData.user.role,
+            userId: userData.user.id,
+          });
+        }
+      } catch (error) {
+        console.log("Erro ao validar credenciais, continuando com signIn normal");
+      }
+      
       const loginData = await signIn("credentials", {
         ...data,
         redirect: false,
@@ -36,9 +78,37 @@ export default function LoginForm() {
       } else {
         setShowNotification(false);
         reset();
+        
         setIsLoading(false);
         toast.success("Login realizado com sucesso");
-        router.push("/dashboard");
+        
+        // Buscar a sessão para verificar o role do usuário e redirecionar corretamente
+        try {
+          const response = await fetch("/api/auth/session");
+          const sessionData = await response.json();
+          
+          // Se não houver sessão no cookie, tentar buscar do sessionStorage
+          let userRole = sessionData?.user?.role;
+          if (!userRole) {
+            const tabSession = await import("@/lib/tab-session").then(m => m.getTabSession());
+            if (tabSession) {
+              userRole = tabSession.role;
+            }
+          }
+          
+          // Redirecionar baseado no role do usuário (não no email)
+          if (userRole === "ADMIN") {
+            router.push("/dashboard/admin");
+          } else {
+            // Profissionais (PSICOLOGO) e outros usuários vão para dashboard normal
+            router.push("/dashboard");
+          }
+        } catch (sessionError) {
+          // Se não conseguir buscar a sessão, redirecionar para dashboard padrão
+          router.push("/dashboard");
+        }
+        
+        router.refresh();
       }  
     } catch (error) {
       setIsLoading(false);

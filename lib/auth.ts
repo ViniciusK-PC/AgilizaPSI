@@ -26,84 +26,135 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         try {
-          console.log(
-            "Authorize function called with credentials:",
-            credentials
-          );
           // Check if user credentials are Correct
           if (!credentials?.email || !credentials?.password) {
-            throw { error: "No Inputs Found", status: 401 };
+            console.log("Missing credentials");
+            return null;
           }
-          console.log("Pass 1 checked ");
-          //Check if user exists
-          const existingUser = await prismaClient.user.findUnique({
-            where: { email: credentials.email },
+          
+          // Normalizar email (trim e lowercase)
+          const normalizedEmail = credentials.email.trim().toLowerCase();
+          
+          // Buscar usuário - tentar primeiro com email normalizado
+          let existingUser = await prismaClient.user.findUnique({
+            where: { email: normalizedEmail },
           });
- 
+
+          // Se não encontrou, tentar buscar todos e comparar (MongoDB não tem case-insensitive nativo)
           if (!existingUser) {
-            console.log("No user found");
-            throw { error: "No user found", status: 401 };
+            const allUsers = await prismaClient.user.findMany({
+              where: {
+                email: {
+                  contains: normalizedEmail,
+                },
+              },
+            });
+            
+            // Encontrar usuário com email que corresponde (case-insensitive)
+            existingUser = allUsers.find(
+              (u) => u.email.toLowerCase() === normalizedEmail
+            ) || null;
           }
- 
-          console.log("Pass 2 Checked");
-          console.log(existingUser);
-          let passwordMatch: boolean = false;
-          //Check if Password is correct
-          if (existingUser && existingUser.password) {
-            // if user exists and password exists
-            passwordMatch = await compare(
-              credentials.password,
-              existingUser.password
-            );
+
+          if (!existingUser) {
+            console.log("No user found for email:", normalizedEmail);
+            return null;
           }
+
+          // Verificar se é um token de acesso (para login via link)
+          if (existingUser.accessToken && credentials.password === existingUser.accessToken) {
+            // Login via token de acesso - verificar se é profissional
+            if (existingUser.role === "PSICOLOGO") {
+              return {
+                id: existingUser.id,
+                name: existingUser.name,
+                email: existingUser.email,
+                role: existingUser.role,
+                picture: null,
+              };
+            }
+          }
+
+          // Verificar senha normal
+          if (!existingUser.password) {
+            console.log("User has no password");
+            return null;
+          }
+
+          const passwordMatch = await compare(
+            credentials.password,
+            existingUser.password
+          );
+
           if (!passwordMatch) {
-            console.log("Senha incorreta");
-            throw { error: "Senha incorreta", status: 401 };
+            console.log("Password mismatch");
+            return null;
           }
-          console.log("Pass 3 Checked");
-          const user = {
+
+          return {
             id: existingUser.id,
             name: existingUser.name,
             email: existingUser.email,
             role: existingUser.role,
-            picture:existingUser,
+            // Não incluir imagem no token para evitar cookies grandes
+            picture: null,
           };
-          //
-          console.log("Compilado pelo usuário");
-          console.log(user);
-          return user;
         } catch (error) {
-          console.log("TODOS Falharam");
-          console.log(error);
-          throw { error: "Algo deu errado", status: 401 };
+          console.error("Auth error:", error);
+          return null;
         }
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
-      const dbUser = await prismaClient.user.findUnique({
-        where: { email: token?.email ?? "" },
-      });
-      if (!dbUser) {
-        token.id = user!.id;
+    async jwt({ token, user, trigger }) {
+      if (user) {
+        // Quando um novo usuário faz login, não sobrescrever completamente se já houver sessão ativa
+        // Isso permite manter informações de sessões anteriores se necessário
+        token.id = user.id;
+        token.name = user.name;
+        token.email = user.email;
+        token.role = user.role;
+        // Não armazenar imagem no token para evitar cookies muito grandes
+        // A imagem será buscada do banco quando necessário
+        token.hasImage = !!user.picture;
         return token;
       }
-      return {
-        id: dbUser.id,
-        name: dbUser.name,
-        email: dbUser.email,
-        role: dbUser.role,
-        picture: dbUser.image,
-      };
+      
+      // Se não há user, buscar do banco apenas para atualizar dados básicos
+      // Não buscar imagem para evitar token grande
+      if (token?.email) {
+        const dbUser = await prismaClient.user.findUnique({
+          where: { email: token.email },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            image: true, // Buscar apenas para verificar se existe
+          },
+        });
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.name = dbUser.name;
+          token.email = dbUser.email;
+          token.role = dbUser.role;
+          token.hasImage = !!dbUser.image;
+          // Não incluir a imagem no token
+        }
+      }
+      
+      return token;
     },
-    session({ session, token }) {
+    async session({ session, token }) {
       if (token && session.user) {
-        session.user.id = token.id;
-        session.user.name = token.name;
-        session.user.email = token.email;
-        session.user.image = token.picture;
-        session.user.role = token.role;
+        session.user.id = token.id as string;
+        session.user.name = token.name as string;
+        session.user.email = token.email as string;
+        session.user.role = token.role as string;
+        // Buscar imagem do banco apenas quando necessário (não armazenar no token)
+        // Se precisar da imagem, buscar via API separada
+        session.user.image = null; // Será buscado via API quando necessário
       }
       return session;
     },

@@ -1,11 +1,11 @@
-import LoginFormWithBg from "@/components/Auth/Login";
- 
+import LoginForm from "@/components/Auth/Login";
 
-export default function page() {
+export const dynamic = 'force-dynamic';
 
+export default function LoginPage() {
     return (
-        <div className="">
-            <LoginFormWithBg/>
+        <div className="min-h-screen">
+            <LoginForm />
         </div>
     );
 }
