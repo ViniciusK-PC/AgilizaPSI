@@ -85,21 +85,8 @@ export default function SessionSwitcher() {
     );
   }
 
-  // Se o usuário atual é profissional e há uma sessão de admin salva
-  if (session?.user?.role === "PSICOLOGO" && adminSession) {
-    return (
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={restoreAdminSession}
-        className="flex items-center gap-2"
-        title="Restaurar sessão do admin"
-      >
-        <Shield className="w-4 h-4" />
-        <span className="hidden md:inline">Admin</span>
-      </Button>
-    );
-  }
+  // Profissionais nunca devem ter acesso ao admin - removido
+  // Se o usuário atual é profissional, não mostrar opção de admin
 
   return null;
 }

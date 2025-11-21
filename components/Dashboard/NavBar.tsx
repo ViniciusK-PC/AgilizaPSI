@@ -31,13 +31,16 @@ export default function Navbar() {
 
   async function handleLogout() {
     // Se for admin, limpar o lock de sessão única
-    if (isAdmin && hasAdminLock()) {
+    // Só verificar após montagem (evitar problemas de SSR)
+    if (mounted && isAdmin && typeof window !== 'undefined' && hasAdminLock()) {
       clearAdminLock();
     }
     
     // Limpar sessão da guia atual (sessionStorage)
     // Isso não afeta outras guias que têm suas próprias sessões
-    clearTabSession();
+    if (typeof window !== 'undefined') {
+      clearTabSession();
+    }
     
     // Fazer logout do NextAuth (limpa cookie compartilhado)
     // Mas outras guias ainda terão suas sessões no sessionStorage

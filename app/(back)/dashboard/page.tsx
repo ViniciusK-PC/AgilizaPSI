@@ -5,7 +5,6 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTabSession } from "@/hooks/useTabSession";
-import { getTabSession } from "@/lib/tab-session";
 
 export const dynamic = 'force-dynamic';
 

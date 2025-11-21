@@ -135,10 +135,23 @@ export function initAdminSessionListener(): () => void {
       try {
         const lock: AdminSessionLock = JSON.parse(e.newValue);
         
-        // Se outra guia fez login como admin e esta guia também é admin
+        // IMPORTANTE: Só limpar sessão se esta guia também for admin
+        // Não interferir com sessões de profissionais
         if (lock.tabId !== getTabId() && hasAdminLock()) {
-          // Esta guia perdeu o lock, limpar sessão
-          clearCurrentAdminSession();
+          // Verificar se esta guia realmente é admin antes de limpar
+          // Buscar sessão atual para verificar o role
+          try {
+            const { getTabSession } = require("./tab-session");
+            const currentTabSession = getTabSession();
+            
+            // Só limpar se realmente for admin
+            if (currentTabSession?.role === "ADMIN") {
+              // Esta guia perdeu o lock, limpar sessão
+              clearCurrentAdminSession();
+            }
+          } catch (error) {
+            console.error("Erro ao verificar sessão da guia:", error);
+          }
         }
       } catch (error) {
         console.error("Erro ao processar evento de sessão admin:", error);
@@ -150,10 +163,18 @@ export function initAdminSessionListener(): () => void {
     if (e.data?.type === "admin_login") {
       const lock: AdminSessionLock = e.data.lock;
       
-      // Se outra guia fez login como admin e esta guia também é admin
+      // IMPORTANTE: Só limpar sessão se esta guia também for admin
+      // Não interferir com sessões de profissionais
       if (lock.tabId !== getTabId() && hasAdminLock()) {
-        // Esta guia perdeu o lock, limpar sessão
-        clearCurrentAdminSession();
+        // Verificar se esta guia realmente é admin antes de limpar
+        const { getTabSession } = require("./tab-session");
+        const currentTabSession = getTabSession();
+        
+        // Só limpar se realmente for admin
+        if (currentTabSession?.role === "ADMIN") {
+          // Esta guia perdeu o lock, limpar sessão
+          clearCurrentAdminSession();
+        }
       }
     } else if (e.data?.type === "admin_logout") {
       // Admin fez logout em outra guia, não fazer nada

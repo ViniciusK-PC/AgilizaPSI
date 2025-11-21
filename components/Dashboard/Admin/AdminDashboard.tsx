@@ -1,14 +1,17 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Calendar, Shield, Package2, Settings, Key, User, Mail } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Users, Shield, Package2, Settings, Key, User, Mail, Building2, Clock, CheckCircle, Activity } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useSession } from "next-auth/react";
 import { useTabSession } from "@/hooks/useTabSession";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function AdminDashboard() {
   const { data: session } = useSession();
@@ -81,6 +84,28 @@ export default function AdminDashboard() {
   const safeStats = stats || {};
   const isDataLoading = isLoading && !stats;
 
+  // Buscar informações de clínicas
+  const { data: clinicsData } = useQuery({
+    queryKey: ["clinics-count"],
+    queryFn: async () => {
+      try {
+        const response = await fetch("/api/admin/clinics");
+        if (!response.ok) return { total: 0, active: 0 };
+        const data = await response.json();
+        const clinics = data.data || [];
+        return {
+          total: clinics.length,
+          active: clinics.filter((c: any) => c.isActive).length,
+        };
+      } catch {
+        return { total: 0, active: 0 };
+      }
+    },
+    retry: 1,
+    refetchOnWindowFocus: false,
+    staleTime: 30000,
+  });
+
   const metrics = [
     {
       title: "Total de Usuários",
@@ -88,22 +113,12 @@ export default function AdminDashboard() {
       icon: Users,
       color: "text-blue-600",
       bgColor: "bg-blue-100 dark:bg-blue-900/20",
+      borderColor: "border-blue-200 dark:border-blue-800",
       details: [
         { label: "Psicólogos", value: safeStats?.users?.psychologists || 0 },
         { label: "Pacientes", value: safeStats?.users?.patients || 0 },
         { label: "Admins", value: safeStats?.users?.admins || 0 },
       ],
-    },
-    {
-      title: "Agendamentos",
-      value: safeStats?.appointments?.total || 0,
-      icon: Calendar,
-      color: "text-green-600",
-      bgColor: "bg-green-100 dark:bg-green-900/20",
-      details: (safeStats?.appointments?.byStatus || []).map((s: any) => ({
-        label: s?.status || "N/A",
-        value: s?._count || 0,
-      })),
     },
   ];
 
@@ -116,16 +131,17 @@ export default function AdminDashboard() {
     );
   }
 
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Dashboard Administrativo
+            Dashboard de Super Admin
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Visão geral do sistema
+            Visão geral completa do sistema AgilizaPSI
           </p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 bg-red-100 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
@@ -141,7 +157,7 @@ export default function AdminDashboard() {
         {metrics.map((metric, index) => {
           const Icon = metric.icon;
           return (
-            <Card key={index} className="border-2">
+            <Card key={index} className={`border-2 ${metric.borderColor || "border-gray-200 dark:border-gray-800"}`}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   {metric.title}
@@ -151,11 +167,11 @@ export default function AdminDashboard() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                <div className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                   {metric.value}
                 </div>
                 {metric.details && metric.details.length > 0 && (
-                  <div className="mt-4 space-y-1">
+                  <div className="mt-4 space-y-1.5">
                     {metric.details.map((detail, i) => (
                       <div
                         key={i}
@@ -166,7 +182,6 @@ export default function AdminDashboard() {
                         </span>
                         <span className="font-semibold text-gray-900 dark:text-white">
                           {detail.value}
-                          {detail.amount && ` (${detail.amount})`}
                         </span>
                       </div>
                     ))}
@@ -176,16 +191,51 @@ export default function AdminDashboard() {
             </Card>
           );
         })}
+        
+        {/* Clínicas */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-blue-600" />
+              <CardTitle className="text-lg">Clínicas</CardTitle>
+            </div>
+            <CardDescription>Gerenciamento de clínicas</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600 dark:text-gray-400">Total de Clínicas:</span>
+              <span className="text-lg font-bold text-gray-900 dark:text-white">
+                {clinicsData?.total || 0}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600 dark:text-gray-400">Clínicas Ativas:</span>
+              <Badge variant="outline" className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800">
+                {clinicsData?.active || 0}
+              </Badge>
+            </div>
+            <Link href="/dashboard/admin/clinic">
+              <Button variant="outline" className="w-full mt-2">
+                <Package2 className="w-4 h-4 mr-2" />
+                Gerenciar Clínicas
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Quick Actions */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Ações Rápidas</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Activity className="w-5 h-5 text-blue-600" />
+              Ações Rápidas
+            </CardTitle>
+            <CardDescription>Acesso rápido às principais funcionalidades</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            <a
+            <Link
               href="/dashboard/admin/clinic"
               className="block p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
@@ -193,8 +243,8 @@ export default function AdminDashboard() {
                 <Package2 className="w-4 h-4 text-purple-600" />
                 <span className="font-medium">Gerenciador de Clínica</span>
               </div>
-            </a>
-            <a
+            </Link>
+            <Link
               href="/dashboard/admin/settings"
               className="block p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
@@ -202,40 +252,44 @@ export default function AdminDashboard() {
                 <Settings className="w-4 h-4 text-gray-600" />
                 <span className="font-medium">Configurações do Sistema</span>
               </div>
-            </a>
-            <a
+            </Link>
+            <Link
               href="/dashboard/admin/reset-password"
               className="block p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
               <div className="flex items-center gap-2">
                 <Key className="w-4 h-4 text-red-600" />
-                <span className="font-medium">Redefinição de Senha</span>
+                <span className="font-medium">Redefinir Senha</span>
               </div>
-            </a>
-            <a
+            </Link>
+            <Link
               href="/dashboard/admin/edit-name"
               className="block p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
               <div className="flex items-center gap-2">
                 <User className="w-4 h-4 text-blue-600" />
-                <span className="font-medium">Editar Nome do Admin</span>
+                <span className="font-medium">Editar Nome</span>
               </div>
-            </a>
-            <a
+            </Link>
+            <Link
               href="/dashboard/admin/edit-email"
               className="block p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-green-600" />
-                <span className="font-medium">Editar Email do Admin</span>
+                <span className="font-medium">Editar Email</span>
               </div>
-            </a>
+            </Link>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Admin</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <User className="w-5 h-5 text-blue-600" />
+              Informações do Admin
+            </CardTitle>
+            <CardDescription>Dados da conta de super admin</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 text-sm">
             <div className="space-y-2">
@@ -284,9 +338,6 @@ export default function AdminDashboard() {
                         <Eye className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                       )}
                     </button>
-                    <span className="text-xs text-gray-500 dark:text-gray-400 italic">
-                      (Protegida - use "Redefinição de Senha" para alterar)
-                    </span>
                   </div>
                 )}
               </div>
@@ -296,27 +347,50 @@ export default function AdminDashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Última Atualização</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Clock className="w-5 h-5 text-gray-600" />
+              Informações do Sistema
+            </CardTitle>
+            <CardDescription>Status e atualizações do sistema</CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              {(() => {
-                try {
-                  return format(new Date(), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", {
-                    locale: ptBR,
-                  });
-                } catch (error) {
-                  console.error("Erro ao formatar data:", error);
-                  return new Date().toLocaleDateString("pt-BR", {
-                    day: "2-digit",
-                    month: "long",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  });
-                }
-              })()}
-            </p>
+          <CardContent className="space-y-3">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Última Atualização:</span>
+                <span className="font-semibold text-gray-900 dark:text-white">
+                  {(() => {
+                    try {
+                      return format(new Date(), "dd/MM/yyyy HH:mm", {
+                        locale: ptBR,
+                      });
+                    } catch (error) {
+                      return new Date().toLocaleDateString("pt-BR", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      });
+                    }
+                  })()}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Status do Sistema:</span>
+                <Badge variant="outline" className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800">
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  Online
+                </Badge>
+              </div>
+            </div>
+            <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+              <Link href="/dashboard/admin/settings">
+                <Button variant="outline" size="sm" className="w-full">
+                  <Settings className="w-3 h-3 mr-2" />
+                  Configurações do Sistema
+                </Button>
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </div>

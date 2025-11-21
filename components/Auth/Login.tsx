@@ -43,16 +43,51 @@ export default function LoginForm() {
         if (validateResponse.ok) {
           const userData = await validateResponse.json();
           
+          // IMPORTANTE: Salvar sessão atual ANTES de fazer login
+          // Se houver uma sessão ativa (admin ou profissional), salvar ela primeiro
+          try {
+            const currentSession = await fetch("/api/auth/session").then(res => res.json());
+            if (currentSession?.user) {
+              // Se a sessão atual é de admin e vamos fazer login como profissional
+              if (currentSession.user.role === "ADMIN" && userData.user.role !== "ADMIN") {
+                // Salvar sessão do admin antes de fazer login como profissional
+                const { saveAdminSession } = await import("@/lib/multi-session");
+                saveAdminSession({
+                  email: currentSession.user.email,
+                  name: currentSession.user.name || "",
+                  role: currentSession.user.role,
+                  id: currentSession.user.id || "",
+                });
+              }
+              // Se a sessão atual é de profissional e vamos fazer login como admin
+              else if (currentSession.user.role === "PSICOLOGO" && userData.user.role === "ADMIN") {
+                // Salvar sessão do profissional antes de fazer login como admin
+                const { saveProfessionalSession } = await import("@/lib/multi-session");
+                saveProfessionalSession({
+                  email: currentSession.user.email,
+                  name: currentSession.user.name || "",
+                  role: currentSession.user.role,
+                  id: currentSession.user.id || "",
+                });
+              }
+            }
+          } catch (error) {
+            console.log("Nenhuma sessão anterior para salvar");
+          }
+          
           // Se for admin, verificar se outra guia já tem sessão de admin ativa
+          // IMPORTANTE: Isso só afeta outras guias de admin, não profissionais
           if (userData.user.role === "ADMIN") {
             // Se outra guia já tem sessão de admin, limpar ela primeiro
-            if (isOtherTabAdmin()) {
+            if (typeof window !== "undefined" && isOtherTabAdmin()) {
               // Limpar o lock anterior (outra guia será notificada)
               clearAdminLock();
             }
             
             // Bloquear sessão de admin para esta guia
-            lockAdminSession(userData.user.id, userData.user.email);
+            if (typeof window !== "undefined") {
+              lockAdminSession(userData.user.id, userData.user.email);
+            }
           }
           
           // Salvar sessão no sessionStorage ANTES de fazer signIn

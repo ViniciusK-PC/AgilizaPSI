@@ -9,38 +9,25 @@ import { getTabSession, TabSession } from "@/lib/tab-session";
 export function useTabSession() {
   const { data: session, status } = useSession();
   
-  // Carregar sessionStorage imediatamente no estado inicial
-  const [tabSession, setTabSession] = useState<TabSession | null>(() => {
-    if (typeof window !== "undefined") {
-      return getTabSession();
-    }
-    return null;
-  });
-  
-  const [activeSession, setActiveSession] = useState<any>(() => {
-    // Inicializar com sessionStorage se disponível
-    if (typeof window !== "undefined") {
-      const savedTabSession = getTabSession();
-      if (savedTabSession) {
-        return {
-          user: {
-            id: savedTabSession.userId,
-            email: savedTabSession.email,
-            name: savedTabSession.name,
-            role: savedTabSession.role,
-          },
-          source: "sessionStorage",
-        };
-      }
-    }
-    return null;
-  });
+  // Sempre inicializar como null durante SSR
+  // Só será atualizado no useEffect após montagem no cliente
+  const [tabSession, setTabSession] = useState<TabSession | null>(null);
+  const [activeSession, setActiveSession] = useState<any>(null);
 
   useEffect(() => {
     // Só executar no cliente
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined") {
+      // Durante SSR, usar apenas a sessão do NextAuth se disponível
+      if (session && status === "authenticated") {
+        setActiveSession({
+          ...session,
+          source: "cookie",
+        });
+      }
+      return;
+    }
 
-    // Verificar sessionStorage imediatamente (já está disponível)
+    // Verificar sessionStorage imediatamente (já está disponível no cliente)
     const savedTabSession = getTabSession();
     setTabSession(savedTabSession);
 
@@ -70,8 +57,9 @@ export function useTabSession() {
   }, [session, status]);
 
   // Determinar se está carregando
-  // Está carregando se o NextAuth está carregando E não há sessão no sessionStorage
-  const isLoading = status === "loading" && !tabSession;
+  // Durante SSR, usar apenas status do NextAuth
+  // No cliente, verificar também sessionStorage
+  const isLoading = status === "loading" && (typeof window === "undefined" || !tabSession);
 
   return {
     session: activeSession,
