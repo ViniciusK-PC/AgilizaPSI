@@ -9,7 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import toast from "react-hot-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useTabSession } from "@/hooks/useTabSession";
+import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 const validationSchema = Yup.object({
   workingHoursStart: Yup.string().required("Horário de início obrigatório"),
@@ -20,27 +24,63 @@ const validationSchema = Yup.object({
 
 export default function PsychologistSettingsForm() {
   const [loading, setLoading] = useState(false);
+  const { data: session } = useSession();
+  const { session: tabSession } = useTabSession();
+  const router = useRouter();
+  
+  // Usar sessão da guia (sessionStorage) se disponível, senão usar sessão do NextAuth (cookie)
+  const activeSession = tabSession || session;
+  const psychologistId = activeSession?.user?.id;
+
+  // Buscar configurações existentes
+  const { data: existingSettings, isLoading: isLoadingSettings } = useQuery({
+    queryKey: ["psychologist-settings", psychologistId],
+    queryFn: async () => {
+      if (!psychologistId) return null;
+      const response = await fetch(`/api/settings/psychologist?psychologistId=${psychologistId}`);
+      if (!response.ok) return null;
+      const data = await response.json();
+      return data.data;
+    },
+    enabled: !!psychologistId,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
 
   const formik = useFormik({
     initialValues: {
-      psychologistId: "demo-psy-id", // Em produção viria da sessão
-      workingHoursStart: "08:00",
-      workingHoursEnd: "18:00",
-      defaultSessionDuration: 60,
-      defaultPrice: 150,
-      acceptOnlineAppointments: true,
-      acceptInPersonAppointments: true,
-      autoConfirmAppointments: false,
-      bio: "",
-      specialties: "",
-      languages: "",
+      psychologistId: psychologistId || "",
+      workingHoursStart: existingSettings?.workingHoursStart || "08:00",
+      workingHoursEnd: existingSettings?.workingHoursEnd || "18:00",
+      defaultSessionDuration: existingSettings?.defaultSessionDuration || 60,
+      defaultPrice: existingSettings?.defaultPrice || 150,
+      acceptOnlineAppointments: existingSettings?.acceptOnlineAppointments ?? true,
+      acceptInPersonAppointments: existingSettings?.acceptInPersonAppointments ?? true,
+      autoConfirmAppointments: existingSettings?.autoConfirmAppointments ?? false,
+      bio: existingSettings?.bio || "",
+      specialties: existingSettings?.specialties?.join(", ") || "",
+      languages: existingSettings?.languages?.join(", ") || "",
     },
+    enableReinitialize: true,
     validationSchema,
     onSubmit: async (values) => {
+      if (!psychologistId) {
+        toast.error("Usuário não autenticado");
+        return;
+      }
+
       setLoading(true);
       try {
         const payload = {
-          ...values,
+          psychologistId,
+          workingHoursStart: values.workingHoursStart,
+          workingHoursEnd: values.workingHoursEnd,
+          defaultSessionDuration: values.defaultSessionDuration,
+          defaultPrice: values.defaultPrice,
+          acceptOnlineAppointments: values.acceptOnlineAppointments,
+          acceptInPersonAppointments: values.acceptInPersonAppointments,
+          autoConfirmAppointments: values.autoConfirmAppointments,
+          bio: values.bio || undefined,
           specialties: values.specialties.split(",").map((s) => s.trim()).filter(Boolean),
           languages: values.languages.split(",").map((l) => l.trim()).filter(Boolean),
         };
@@ -53,6 +93,10 @@ export default function PsychologistSettingsForm() {
 
         if (response.ok) {
           toast.success("Configurações salvas com sucesso!");
+          // Redirecionar para o dashboard após 1 segundo
+          setTimeout(() => {
+            router.push("/dashboard");
+          }, 1000);
         } else {
           const data = await response.json();
           toast.error(data.error || "Erro ao salvar configurações");
@@ -64,6 +108,25 @@ export default function PsychologistSettingsForm() {
       }
     },
   });
+
+  // Atualizar valores quando as configurações existentes forem carregadas
+  useEffect(() => {
+    if (existingSettings) {
+      formik.setValues({
+        psychologistId: psychologistId || "",
+        workingHoursStart: existingSettings.workingHoursStart || "08:00",
+        workingHoursEnd: existingSettings.workingHoursEnd || "18:00",
+        defaultSessionDuration: existingSettings.defaultSessionDuration || 60,
+        defaultPrice: existingSettings.defaultPrice || 150,
+        acceptOnlineAppointments: existingSettings.acceptOnlineAppointments ?? true,
+        acceptInPersonAppointments: existingSettings.acceptInPersonAppointments ?? true,
+        autoConfirmAppointments: existingSettings.autoConfirmAppointments ?? false,
+        bio: existingSettings.bio || "",
+        specialties: existingSettings.specialties?.join(", ") || "",
+        languages: existingSettings.languages?.join(", ") || "",
+      });
+    }
+  }, [existingSettings, psychologistId]);
 
   return (
     <div className="space-y-6 max-w-4xl">

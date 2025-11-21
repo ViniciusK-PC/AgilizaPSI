@@ -7,7 +7,6 @@ import { Bell, Home, Calendar, FileText, DollarSign, Video,
   Package, Package2, ShoppingCart, TrendingUp, Users, Settings, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { useState } from "react"
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/badge";
@@ -76,23 +75,6 @@ export default function Sidebar() {
             )
           })}
         </nav>
-
-        {/* Upgrade Card */}
-        <div className="p-4">
-          <Card className="border-2">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Upgrade to Pro</CardTitle>
-              <CardDescription className="text-sm leading-relaxed">
-                Unlock all features and get unlimited access to our support team.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button className="w-full bg-foreground text-background hover:bg-foreground/90">
-                Upgrade
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
       </aside>
     </div>
   );

@@ -1,6 +1,7 @@
 "use server";
 
 import { prismaClient } from "@/lib/db";
+import { isValidObjectId } from "@/lib/utils";
 
 export type CreateSettingsProps = {
   psychologistId: string;
@@ -20,6 +21,15 @@ export type CreateSettingsProps = {
 export async function upsertPsychologistSettings(data: CreateSettingsProps) {
   try {
     const { psychologistId, ...settingsData } = data;
+
+    // Validar ObjectID
+    if (!psychologistId || !isValidObjectId(psychologistId)) {
+      return {
+        data: null,
+        error: "ID do psicólogo inválido",
+        status: 400,
+      };
+    }
 
     const settings = await prismaClient.psychologistSettings.upsert({
       where: { psychologistId },
@@ -53,6 +63,15 @@ export async function upsertPsychologistSettings(data: CreateSettingsProps) {
 // READ
 export async function getPsychologistSettings(psychologistId: string) {
   try {
+    // Validar ObjectID
+    if (!psychologistId || !isValidObjectId(psychologistId)) {
+      return {
+        data: null,
+        error: "ID do psicólogo inválido",
+        status: 400,
+      };
+    }
+
     const settings = await prismaClient.psychologistSettings.findUnique({
       where: { psychologistId },
       include: {
