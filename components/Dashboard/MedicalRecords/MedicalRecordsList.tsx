@@ -173,7 +173,16 @@ export default function MedicalRecordsList() {
             </div>
           )}
 
-          {!selectedPatientId && !isLoading && (
+          {!selectedPatientId && !isLoading && patients.length === 0 && (
+            <div className="text-center py-12">
+              <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">
+                Nenhum paciente agendado encontrado
+              </p>
+            </div>
+          )}
+
+          {!selectedPatientId && !isLoading && patients.length > 0 && (
             <div className="text-center py-12">
               <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground">

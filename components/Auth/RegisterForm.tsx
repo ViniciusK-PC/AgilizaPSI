@@ -3,11 +3,11 @@
 import { useForm } from "react-hook-form";
 import { type RegisterInputProps } from "@/types/type";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createUser } from "@/actions/users";
 import toast from "react-hot-toast";
 import { UserRole } from "@prisma/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Heart, Mail, Lock, User, Phone, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,26 @@ export default function RegisterForm({ role = "USER" }: { role?: UserRole }) {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
+  
+  useEffect(() => {
+    // Verificar se há parâmetro de redirect na URL
+    const redirect = searchParams.get("redirect");
+    if (redirect) {
+      // Se houver parâmetros adicionais, incluí-los no redirect
+      const params = new URLSearchParams();
+      searchParams.forEach((value, key) => {
+        if (key !== "redirect") {
+          params.set(key, value);
+        }
+      });
+      const fullRedirect = params.toString() 
+        ? `${redirect}?${params.toString()}`
+        : redirect;
+      setRedirectUrl(fullRedirect);
+    }
+  }, [searchParams]);
   
   const {
     register,
@@ -52,8 +72,9 @@ export default function RegisterForm({ role = "USER" }: { role?: UserRole }) {
             router.push("/login");
           } else {
             setIsLoading(false);
-            // Redirecionar para o dashboard (o middleware e layout verificarão autenticação e role)
-            router.push("/dashboard");
+            // Redirecionar para a URL de redirect se houver, senão para o dashboard
+            const finalRedirect = redirectUrl || "/dashboard";
+            router.push(finalRedirect);
             router.refresh(); // Forçar atualização da sessão
           }
         } catch (loginError) {

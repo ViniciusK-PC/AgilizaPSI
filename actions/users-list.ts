@@ -36,12 +36,16 @@ export async function getPsychologists() {
   }
 }
 
-// Buscar todos os pacientes
+// Buscar apenas pacientes agendados (role USER que têm agendamentos)
 export async function getPatients() {
   try {
-    const patients = await prismaClient.user.findMany({
+    // Buscar pacientes que têm pelo menos um agendamento
+    const patientsWithAppointments = await prismaClient.user.findMany({
       where: {
-        role: UserRole.USER,
+        role: UserRole.USER, // Apenas pacientes (não profissionais, não admin)
+        appointmentsAsPatient: {
+          some: {}, // Pelo menos um agendamento
+        },
       },
       select: {
         id: true,
@@ -55,7 +59,7 @@ export async function getPatients() {
     });
 
     return {
-      data: patients,
+      data: patientsWithAppointments,
       error: null,
       status: 200,
     };
