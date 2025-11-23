@@ -2,8 +2,6 @@
 
 import Link from "next/link";
 import SectionHeading from "./SectionHeading";
-import ToggleButton from "./ToggleButton";
-import { Map } from "lucide-react";
 import DoctorListCarousel from "./DoctorsListCarousel";
 import { useQuery } from "@tanstack/react-query";
 import { User } from "@prisma/client";
@@ -34,22 +32,6 @@ export default function DoctorList({
         <div className={className}>
             <div className="max-w-6xl mx-auto">
                 <SectionHeading title={title} />
-                <div className="py-4 flex items-center justify-between">
-                    {isInPerson ? (
-                        <Link
-                            href=""
-                            className="text-sm flex items-center text-blue-700 dark:text-blue-400 font-semibold"
-                        >
-                            <Map className="mr-2 flex-shrink-0 w-4 h-4" />
-                            <span>Map View</span>
-                        </Link>
-                    ) : (
-                        <ToggleButton />
-                    )}
-                    <Link className="py-3 px-6 border border-blue-600 dark:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-colors" href="#">
-                        See All
-                    </Link>
-                </div>
 
                 <div className="py-6">
                     {isLoading ? (

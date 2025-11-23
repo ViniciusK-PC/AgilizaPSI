@@ -4,6 +4,7 @@ import { prismaClient } from "@/lib/db";
 import { UserRole } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { isValidObjectId } from "@/lib/utils";
 
 export type CreatePsychologistProps = {
   name: string;
@@ -33,6 +34,7 @@ export type UpdatePsychologistProps = {
 
 export type CreateBankAccountProps = {
   userId: string;
+  paymentMethod?: string; // "BANK_ACCOUNT" ou "PIX"
   bankName?: string;
   agency?: string;
   account?: string;
@@ -282,13 +284,33 @@ export async function upsertBankAccount(data: CreateBankAccountProps) {
   try {
     const { userId, ...bankData } = data;
 
+    // Validar ObjectID
+    if (!userId || !isValidObjectId(userId)) {
+      return {
+        data: null,
+        error: "ID do usuário inválido",
+        status: 400,
+      };
+    }
+
+    // Limpar campos undefined para evitar problemas no Prisma
+    const cleanBankData: any = {};
+    Object.keys(bankData).forEach((key) => {
+      const value = (bankData as any)[key];
+      if (value !== undefined && value !== null && value !== "") {
+        cleanBankData[key] = value;
+      }
+    });
+
+    console.log("Dados bancários limpos:", cleanBankData);
+
     const bankAccount = await prismaClient.bankAccount.upsert({
       where: { userId },
       create: {
         userId,
-        ...bankData,
+        ...cleanBankData,
       },
-      update: bankData,
+      update: cleanBankData,
     });
 
     return {
@@ -296,11 +318,12 @@ export async function upsertBankAccount(data: CreateBankAccountProps) {
       error: null,
       status: 200,
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error upserting bank account:", error);
+    console.error("Stack trace:", error.stack);
     return {
       data: null,
-      error: "Erro ao salvar dados bancários",
+      error: error.message || "Erro ao salvar dados bancários",
       status: 500,
     };
   }

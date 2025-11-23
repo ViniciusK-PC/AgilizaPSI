@@ -62,6 +62,7 @@ export async function createPayment(data: CreatePaymentProps) {
 export async function getPayments(filters?: {
   status?: PaymentStatus;
   psychologistId?: string;
+  appointmentId?: string;
   dateFrom?: Date;
   dateTo?: Date;
 }) {
@@ -70,6 +71,10 @@ export async function getPayments(filters?: {
 
     if (filters?.status) {
       where.status = filters.status;
+    }
+
+    if (filters?.appointmentId) {
+      where.appointmentId = filters.appointmentId;
     }
 
     if (filters?.psychologistId) {
@@ -113,13 +118,54 @@ export async function getPayments(filters?: {
 }
 
 // UPDATE
-export async function updatePayment(id: string, data: UpdatePaymentProps) {
+export async function updatePayment(
+  id: string,
+  data: UpdatePaymentProps,
+  userId?: string,
+  userRole?: string
+) {
   try {
+    // Buscar o pagamento primeiro para verificar permissões
+    const existingPayment = await prismaClient.payment.findUnique({
+      where: { id },
+      include: {
+        appointment: {
+          select: {
+            psychologistId: true,
+          },
+        },
+      },
+    });
+
+    if (!existingPayment) {
+      return { data: null, error: "Pagamento não encontrado", status: 404 };
+    }
+
+    // Se for psicólogo, só pode atualizar seus próprios pagamentos
+    if (userRole === "PSICOLOGO" && userId && existingPayment.appointment.psychologistId !== userId) {
+      return {
+        data: null,
+        error: "Sem permissão para atualizar este pagamento",
+        status: 403,
+      };
+    }
+
+    // Se o status mudou para PAID, atualizar paidAt automaticamente
+    const updateData: any = { ...data };
+    if (data.status === "PAID" && !data.paidAt) {
+      updateData.paidAt = new Date();
+    }
+
     const payment = await prismaClient.payment.update({
       where: { id },
-      data,
+      data: updateData,
       include: {
-        appointment: true,
+        appointment: {
+          include: {
+            psychologist: { select: { id: true, name: true } },
+            patient: { select: { id: true, name: true } },
+          },
+        },
       },
     });
 
@@ -132,6 +178,7 @@ export async function updatePayment(id: string, data: UpdatePaymentProps) {
     if (error.code === "P2023" || error.code === "P2025") {
       return { data: null, error: "Pagamento não encontrado", status: 404 };
     }
+    console.error("Error updating payment:", error);
     return { data: null, error: "Erro ao atualizar pagamento", status: 500 };
   }
 }

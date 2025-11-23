@@ -1,9 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createPayment, getPayments } from "@/actions/payments";
 import { PaymentStatus } from "@prisma/client";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "Não autenticado" },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const result = await createPayment(body);
     return NextResponse.json(
@@ -11,14 +23,21 @@ export async function POST(request: NextRequest) {
       { status: result.status }
     );
   } catch (error) {
+    console.error("Error creating payment:", error);
     return NextResponse.json({ error: "Erro ao processar requisição" }, { status: 500 });
   }
 }
 
-export const dynamic = 'force-dynamic';
-
 export async function GET(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "Não autenticado" },
+        { status: 401 }
+      );
+    }
+
     const searchParams = request.nextUrl.searchParams;
     
     const filters: any = {};
@@ -27,8 +46,17 @@ export async function GET(request: NextRequest) {
       filters.status = searchParams.get("status") as PaymentStatus;
     }
     
-    if (searchParams.get("psychologistId")) {
+    // Se for psicólogo, só pode ver seus próprios pagamentos
+    // Se for admin, pode ver todos (não filtra)
+    if (session.user.role === "PSICOLOGO") {
+      filters.psychologistId = session.user.id;
+    } else if (searchParams.get("psychologistId")) {
+      // Admin pode filtrar por psicólogo específico
       filters.psychologistId = searchParams.get("psychologistId");
+    }
+
+    if (searchParams.get("appointmentId")) {
+      filters.appointmentId = searchParams.get("appointmentId");
     }
 
     if (searchParams.get("dateFrom")) {
@@ -54,6 +82,7 @@ export async function GET(request: NextRequest) {
       { status: result.status }
     );
   } catch (error) {
+    console.error("Error fetching payments:", error);
     return NextResponse.json({ error: "Erro ao processar requisição" }, { status: 500 });
   }
 }

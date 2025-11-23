@@ -134,13 +134,16 @@ export default function LoginForm() {
           // Redirecionar baseado no role do usuário (não no email)
           if (userRole === "ADMIN") {
             router.push("/dashboard/admin");
-          } else {
-            // Profissionais (PSICOLOGO) e outros usuários vão para dashboard normal
+          } else if (userRole === "PSICOLOGO") {
+            // Profissionais vão para dashboard normal
             router.push("/dashboard");
+          } else {
+            // Pacientes (USER) são redirecionados para o perfil
+            router.push("/profile");
           }
         } catch (sessionError) {
-          // Se não conseguir buscar a sessão, redirecionar para dashboard padrão
-          router.push("/dashboard");
+          // Se não conseguir buscar a sessão, redirecionar para perfil (pacientes)
+          router.push("/profile");
         }
         
         router.refresh();

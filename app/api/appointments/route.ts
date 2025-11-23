@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAppointment, getAppointments } from "@/actions/appointments";
 import { CreateAppointmentProps, AppointmentFilterProps } from "@/types/type";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 
 // POST - Criar novo agendamento
 export async function POST(request: NextRequest) {
@@ -18,6 +18,14 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await createAppointment(body);
+
+    // Log para debug
+    console.log("POST /api/appointments - Result:", {
+      status: result.status,
+      hasData: !!result.data,
+      dataId: result.data?.id,
+      error: result.error,
+    });
 
     return NextResponse.json(
       { data: result.data, error: result.error },

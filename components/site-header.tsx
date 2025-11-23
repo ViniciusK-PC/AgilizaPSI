@@ -2,14 +2,21 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Menu, X, LogIn, User } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Menu, X, LogIn, User, LayoutDashboard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useSession, signOut } from 'next-auth/react'
 import { ModeToggle } from '@/components/ModeToggle'
+import { useQueryClient } from '@tanstack/react-query'
 
 export function SiteHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
+  const queryClient = useQueryClient()
+  const router = useRouter()
+  
+  // Verificar se a sessão é válida (tem dados necessários)
+  const isValidSession = session && session.user && session.user.email && session.user.id && status === "authenticated"
 
   const navItems = [
     { label: 'Início', href: '/' },
@@ -49,17 +56,48 @@ export function SiteHeader() {
           {/* Theme Toggle */}
           <ModeToggle />
           
-          {session ? (
+          {isValidSession ? (
             <>
-              <Button asChild variant="outline">
-                <Link href="/dashboard">
-                  <User className="mr-2 h-4 w-4" />
+              {session.user?.role === "USER" && (
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  className="hidden sm:flex"
+                  onClick={() => {
+                    router.push("/patient-dashboard");
+                  }}
+                >
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
                   Dashboard
+                </Button>
+              )}
+              <Button asChild variant="outline">
+                <Link href={session.user?.role === "USER" ? "/profile" : "/dashboard"}>
+                  <User className="mr-2 h-4 w-4" />
+                  <span className="hidden sm:inline">
+                    {session.user?.role === "USER" ? (session.user?.name || "Perfil") : "Dashboard"}
+                  </span>
+                  <span className="sm:hidden">
+                    {session.user?.role === "USER" ? "Perfil" : "Dashboard"}
+                  </span>
                 </Link>
               </Button>
               <Button
                 variant="ghost"
-                onClick={() => signOut({ callbackUrl: '/' })}
+                onClick={async () => {
+                  // Limpar cache do React Query completamente
+                  queryClient.clear();
+                  queryClient.resetQueries();
+                  
+                  // Limpar sessionStorage e localStorage
+                  if (typeof window !== 'undefined') {
+                    sessionStorage.clear();
+                    localStorage.clear();
+                  }
+                  
+                  // Fazer logout e redirecionar para home
+                  await signOut({ callbackUrl: '/', redirect: true });
+                }}
                 className="text-sm"
               >
                 Sair
@@ -108,7 +146,50 @@ export function SiteHeader() {
           <div className="pt-2 border-t border-gray-200 dark:border-gray-800">
             <ModeToggle />
           </div>
-          {!session && (
+          {isValidSession ? (
+            <div className="pt-4 border-t border-gray-200 dark:border-gray-800 space-y-2">
+              {session.user?.role === "USER" && (
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => {
+                    router.push("/patient-dashboard");
+                    setMobileMenuOpen(false);
+                  }}
+                >
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  Dashboard
+                </Button>
+              )}
+              <Button asChild variant="outline" className="w-full">
+                <Link href={session.user?.role === "USER" ? "/profile" : "/dashboard"}>
+                  <User className="mr-2 h-4 w-4" />
+                  {session.user?.role === "USER" ? (session.user?.name || "Perfil") : "Dashboard"}
+                </Link>
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={async () => {
+                  // Limpar cache do React Query completamente
+                  queryClient.clear();
+                  queryClient.resetQueries();
+                  
+                  // Limpar sessionStorage e localStorage
+                  if (typeof window !== 'undefined') {
+                    sessionStorage.clear();
+                    localStorage.clear();
+                  }
+                  
+                  // Fazer logout e redirecionar para home
+                  await signOut({ callbackUrl: '/', redirect: true });
+                }}
+                className="w-full text-sm"
+              >
+                Sair
+              </Button>
+            </div>
+          ) : (
             <div className="pt-4 border-t border-gray-200 dark:border-gray-800 space-y-2">
               <Button asChild variant="outline" className="w-full">
                 <Link href="/login">

@@ -21,6 +21,8 @@ import { Calendar, Clock, User, Video, MapPin, Phone, Mail } from "lucide-react"
 import { useCreateAppointment } from "@/hooks/useAppointments";
 import { useSession } from "next-auth/react";
 import { useTabSession } from "@/hooks/useTabSession";
+import { formatTimeBrasilia, filterPastSlots } from "@/lib/utils";
+import toast from "react-hot-toast";
 
 const validationSchema = Yup.object({
   psychologistId: Yup.string().required("Selecione um psicólogo"),
@@ -69,7 +71,7 @@ export default function AppointmentBooking({
   });
 
   // Buscar horários disponíveis
-  const { data: availableSlots, isLoading: loadingSlots } = useQuery({
+  const { data: availableSlotsRaw, isLoading: loadingSlots } = useQuery({
     queryKey: ["available-slots", selectedPsychologistId, selectedDate],
     queryFn: async () => {
       if (!selectedPsychologistId || !selectedDate) return null;
@@ -82,6 +84,11 @@ export default function AppointmentBooking({
     },
     enabled: !!selectedPsychologistId && !!selectedDate,
   });
+
+  // Filtrar horários que já passaram (se a data selecionada for hoje)
+  const availableSlots = selectedDate 
+    ? filterPastSlots(availableSlotsRaw || [], selectedDate)
+    : availableSlotsRaw || [];
 
   // Psicólogo selecionado
   const selectedPsychologist = psychologists.find((p: any) => p.id === selectedPsychologistId);
@@ -115,7 +122,7 @@ export default function AppointmentBooking({
 
       // Criar agendamento vinculando o paciente autenticado
       try {
-        await createAppointment.mutateAsync({
+        const result = await createAppointment.mutateAsync({
           psychologistId: values.psychologistId,
           patientId: patientId || null, // Vincular o paciente autenticado
           date: new Date(values.date),
@@ -127,11 +134,36 @@ export default function AppointmentBooking({
           price: selectedPsychologist.psychologistSettings?.defaultAppointmentPrice || undefined,
         });
 
-        // O toast já é gerenciado pelo hook useCreateAppointment
-        router.push("/");
+        // A resposta da API vem como { data: {...}, error: null }
+        // O agendamento está em result.data
+        const appointment = result?.data;
+        const appointmentId = appointment?.id;
+        
+        console.log("Agendamento criado - Result completo:", result);
+        console.log("Agendamento criado - Dados:", appointment);
+        console.log("Agendamento criado - ID:", appointmentId);
+        
+        if (appointmentId) {
+          // Verificar se o checkout está habilitado nas configurações do psicólogo
+          const enableCheckout = selectedPsychologist.psychologistSettings?.enableCheckout ?? true;
+          
+          if (enableCheckout) {
+            console.log("Checkout habilitado, redirecionando para checkout:", `/checkout/${appointmentId}`);
+            // Usar window.location para garantir o redirecionamento
+            window.location.href = `/checkout/${appointmentId}`;
+          } else {
+            console.log("Checkout desabilitado, redirecionando para home");
+            toast.success("Agendamento criado com sucesso!");
+            router.push("/");
+          }
+        } else {
+          console.error("ID do agendamento não encontrado. Result:", result);
+          toast.error("Erro ao obter ID do agendamento. Tente novamente.");
+        }
       } catch (error: any) {
         // O erro já é gerenciado pelo hook
         console.error("Error creating appointment:", error);
+        toast.error(error?.message || "Erro ao criar agendamento");
       }
     },
   });
@@ -148,13 +180,7 @@ export default function AppointmentBooking({
     return dates;
   };
 
-  const formatTime = (time: string) => {
-    const [hours, minutes] = time.split(":");
-    const hour = parseInt(hours);
-    const period = hour >= 12 ? "pm" : "am";
-    const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
-    return `${displayHour}:${minutes} ${period}`;
-  };
+  const formatTime = formatTimeBrasilia;
 
   return (
     <div className="grid md:grid-cols-2 gap-6">

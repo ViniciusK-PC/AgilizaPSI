@@ -125,6 +125,10 @@ model User {
   bankAccount                BankAccount?          @relation("UserBankAccount")
   clinic                     Clinic?               @relation("ClinicProfessionals", fields: [clinicId], references: [id], onDelete: SetNull)
   clinicId                   String?               @db.ObjectId
+  availabilities             Availability[]        @relation("PsychologistAvailabilities")
+  sentMessages               ChatMessage[]         @relation("SentMessages")
+  receivedMessages           ChatMessage[]         @relation("ReceivedMessages")
+  withdrawals                Withdrawal[]          @relation("PsychologistWithdrawals")
 }
 
 model Appointment {
@@ -215,6 +219,37 @@ model Payment {
   @@index([paidAt])
 }
 
+// Saques/Retiradas do Profissional
+enum WithdrawalStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  CANCELLED
+  REJECTED
+}
+
+model Withdrawal {
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  psychologistId  String          @db.ObjectId
+  amount          Float           // Valor do saque
+  status          WithdrawalStatus @default(PENDING)
+  method          String?         // Método de saque (PIX, BANK_TRANSFER)
+  bankAccountId   String?         @db.ObjectId // Referência aos dados bancários
+  notes           String?         // Observações/notas
+  processedAt     DateTime?       // Data em que foi processado
+  cancelledAt     DateTime?       // Data em que foi cancelado
+  
+  psychologist    User            @relation("PsychologistWithdrawals", fields: [psychologistId], references: [id], onDelete: Cascade)
+  bankAccount     BankAccount?    @relation("WithdrawalBankAccount", fields: [bankAccountId], references: [id], onDelete: SetNull)
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([psychologistId])
+  @@index([status])
+  @@index([createdAt])
+}
+
 // Lembretes e Notificações
 enum ReminderType {
   EMAIL
@@ -243,6 +278,26 @@ model Reminder {
   @@index([sent])
 }
 
+// Chat entre Paciente e Psicólogo
+model ChatMessage {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  senderId        String   @db.ObjectId
+  receiverId      String   @db.ObjectId
+  message         String
+  read            Boolean  @default(false)
+  readAt          DateTime?
+  
+  sender          User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver        User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([createdAt])
+}
+
 // Configurações de Personalização
 model PsychologistSettings {
   id                    String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -255,6 +310,8 @@ model PsychologistSettings {
   acceptOnlineAppointments Boolean @default(true)
   acceptInPersonAppointments Boolean @default(true)
   autoConfirmAppointments Boolean @default(false)
+  enableCheckout        Boolean  @default(true) // Ativar/desativar checkout de pagamento
+  pixKey                String?  // Chave PIX do profissional para gerar QR Code
   
   bio                   String?
   specialties           String[]
@@ -266,10 +323,31 @@ model PsychologistSettings {
   updatedAt             DateTime @updatedAt
 }
 
+// Disponibilidade por data do psicólogo
+model Availability {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  psychologistId  String   @db.ObjectId
+  date            DateTime  // Data da disponibilidade
+  availableSlots String[]  // Array de horários disponíveis no formato ["08:00", "09:00", ...]
+  isAvailable     Boolean  @default(true) // Se false, o dia inteiro está indisponível
+  
+  psychologist    User     @relation("PsychologistAvailabilities", fields: [psychologistId], references: [id], onDelete: Cascade)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([psychologistId, date])
+  @@index([psychologistId])
+  @@index([date])
+}
+
 // Dados Bancários do Profissional
 model BankAccount {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId
   userId          String   @unique @db.ObjectId
+  
+  // Método de recebimento preferido
+  paymentMethod   String?  // "BANK_ACCOUNT" ou "PIX"
   
   // Dados bancários
   bankName        String?  // Nome do banco
@@ -286,6 +364,7 @@ model BankAccount {
   cpf             String?  // CPF do titular
   
   user            User     @relation("UserBankAccount", fields: [userId], references: [id], onDelete: Cascade)
+  withdrawals     Withdrawal[] @relation("WithdrawalBankAccount")
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

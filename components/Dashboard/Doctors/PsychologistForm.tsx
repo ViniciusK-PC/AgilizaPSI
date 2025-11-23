@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Upload, CreditCard, User } from "lucide-react";
+import { X, Upload, CreditCard, User, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,22 +38,25 @@ type Props = {
   onClose: () => void;
 };
 
-const validationSchema = Yup.object({
-  name: Yup.string().required("Nome é obrigatório"),
-  email: Yup.string().email("Email inválido").required("Email é obrigatório"),
-  phone: Yup.string().required("Telefone é obrigatório"),
-  password: Yup.string().when("psychologist", {
-    is: (val: Psychologist | null) => !val,
-    then: (schema) => schema.required("Senha é obrigatória").min(6, "Mínimo 6 caracteres"),
-    otherwise: (schema) => schema,
-  }),
-  crp: Yup.string(),
-  pixKey: Yup.string().when("pixKeyType", {
-    is: (val: string) => val && val !== "",
-    then: (schema) => schema.required("Chave PIX é obrigatória quando tipo é selecionado"),
-    otherwise: (schema) => schema,
-  }),
-});
+// Schema de validação dinâmico baseado se é criação ou edição
+const getValidationSchema = (isEdit: boolean) => {
+  return Yup.object({
+    name: Yup.string().required("Nome é obrigatório"),
+    email: isEdit 
+      ? Yup.string().email("Email inválido") // Email não obrigatório na edição
+      : Yup.string().email("Email inválido").required("Email é obrigatório"),
+    phone: Yup.string().required("Telefone é obrigatório"),
+    password: isEdit
+      ? Yup.string() // Senha não obrigatória na edição
+      : Yup.string().required("Senha é obrigatória").min(6, "Mínimo 6 caracteres"),
+    crp: Yup.string(),
+    pixKey: Yup.string().when("pixKeyType", {
+      is: (val: string) => val && val !== "",
+      then: (schema) => schema.required("Chave PIX é obrigatória quando tipo é selecionado"),
+      otherwise: (schema) => schema,
+    }),
+  });
+};
 
 export default function PsychologistForm({ psychologist, onClose }: Props) {
   const [imagePreview, setImagePreview] = useState<string | null>(
@@ -61,6 +64,7 @@ export default function PsychologistForm({ psychologist, onClose }: Props) {
   );
   const [imageFile, setImageFile] = useState<File | null>(null);
   const queryClient = useQueryClient();
+  const isEdit = !!psychologist;
 
   const formik = useFormik({
     initialValues: {
@@ -79,7 +83,10 @@ export default function PsychologistForm({ psychologist, onClose }: Props) {
       languages: psychologist?.languages?.join(", ") || "",
       specialties: psychologist?.specialties?.join(", ") || "",
 
-      // Dados bancários
+      // Dados bancários - determinar método baseado nos dados existentes
+      paymentMethod: psychologist?.bankAccount?.paymentMethod || 
+        (psychologist?.bankAccount?.pixKey ? "PIX" : 
+         (psychologist?.bankAccount?.bankName ? "BANK_ACCOUNT" : "")),
       bankName: psychologist?.bankAccount?.bankName || "",
       agency: psychologist?.bankAccount?.agency || "",
       account: psychologist?.bankAccount?.account || "",
@@ -89,13 +96,14 @@ export default function PsychologistForm({ psychologist, onClose }: Props) {
       accountHolderName: psychologist?.bankAccount?.accountHolderName || "",
       cpf: psychologist?.bankAccount?.cpf || "",
     },
-    validationSchema,
-    onSubmit: async (values) => {
+    validationSchema: getValidationSchema(isEdit),
+    enableReinitialize: true,
+    onSubmit: async (values, { setSubmitting }) => {
       try {
+        setSubmitting(true);
         // Preparar dados do psicólogo
         const psychologistData: any = {
           name: values.name,
-          email: values.email,
           phone: values.phone,
           crp: values.crp || undefined,
           specialization: values.specialization || undefined,
@@ -112,6 +120,11 @@ export default function PsychologistForm({ psychologist, onClose }: Props) {
           image: imagePreview || undefined,
         };
 
+        // Email só pode ser alterado na criação, não na atualização
+        if (!psychologist) {
+          psychologistData.email = values.email;
+        }
+
         if (!psychologist && values.password) {
           psychologistData.password = values.password;
         }
@@ -121,15 +134,18 @@ export default function PsychologistForm({ psychologist, onClose }: Props) {
 
         if (psychologist) {
           // UPDATE
+          console.log("Atualizando psicólogo:", psychologist.id, psychologistData);
           const response = await fetch(`/api/psychologists/${psychologist.id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(psychologistData),
           });
 
+          const responseData = await response.json();
+          console.log("Resposta da atualização:", responseData);
+
           if (!response.ok) {
-            const data = await response.json();
-            throw new Error(data.error || "Erro ao atualizar");
+            throw new Error(responseData.error || "Erro ao atualizar");
           }
         } else {
           // CREATE
@@ -148,30 +164,48 @@ export default function PsychologistForm({ psychologist, onClose }: Props) {
           psychologistId = data.data.id;
         }
 
-        // Salvar dados bancários
-        if (psychologistId && (values.pixKey || values.bankName)) {
-          const bankData = {
-            bankName: values.bankName || undefined,
-            agency: values.agency || undefined,
-            account: values.account || undefined,
-            accountType: values.accountType || undefined,
-            pixKey: values.pixKey || undefined,
-            pixKeyType: values.pixKeyType || undefined,
-            accountHolderName: values.accountHolderName || undefined,
-            cpf: values.cpf || undefined,
+        // Salvar dados bancários (só se houver método selecionado)
+        if (psychologistId && values.paymentMethod) {
+          const bankData: any = {
+            paymentMethod: values.paymentMethod,
           };
 
-          const bankResponse = await fetch(
-            `/api/psychologists/${psychologistId}/bank-account`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(bankData),
-            }
-          );
+          // Se escolheu conta bancária, incluir dados bancários
+          if (values.paymentMethod === "BANK_ACCOUNT") {
+            bankData.bankName = values.bankName || undefined;
+            bankData.agency = values.agency || undefined;
+            bankData.account = values.account || undefined;
+            bankData.accountType = values.accountType || undefined;
+            bankData.accountHolderName = values.accountHolderName || undefined;
+            bankData.cpf = values.cpf || undefined;
+          }
 
-          if (!bankResponse.ok) {
-            console.error("Erro ao salvar dados bancários");
+          // Se escolheu PIX, incluir dados PIX
+          if (values.paymentMethod === "PIX") {
+            bankData.pixKey = values.pixKey || undefined;
+            bankData.pixKeyType = values.pixKeyType || undefined;
+            bankData.accountHolderName = values.accountHolderName || undefined;
+            bankData.cpf = values.cpf || undefined;
+          }
+
+          try {
+            const bankResponse = await fetch(
+              `/api/psychologists/${psychologistId}/bank-account`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(bankData),
+              }
+            );
+
+            if (!bankResponse.ok) {
+              const bankError = await bankResponse.json();
+              console.error("Erro ao salvar dados bancários:", bankError);
+              // Não lançar erro aqui para não impedir o salvamento do psicólogo
+            }
+          } catch (bankError) {
+            console.error("Erro ao salvar dados bancários:", bankError);
+            // Não lançar erro aqui para não impedir o salvamento do psicólogo
           }
         }
 
@@ -181,7 +215,10 @@ export default function PsychologistForm({ psychologist, onClose }: Props) {
         );
         onClose();
       } catch (error: any) {
+        console.error("Erro ao salvar psicólogo:", error);
         toast.error(error.message || "Erro ao salvar");
+      } finally {
+        setSubmitting(false);
       }
     },
   });
@@ -372,26 +409,63 @@ export default function PsychologistForm({ psychologist, onClose }: Props) {
           <div>
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <CreditCard className="w-5 h-5" />
-              Dados Bancários e PIX
+              Dados para Recebimento
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="bankName">Nome do Banco</Label>
-                <Input id="bankName" {...formik.getFieldProps("bankName")} />
-              </div>
+            
+            {/* Seleção do método de recebimento */}
+            <div className="mb-6">
+              <Label htmlFor="paymentMethod">Como deseja receber os pagamentos? *</Label>
+              <Select
+                value={formik.values.paymentMethod}
+                onValueChange={(value) => {
+                  formik.setFieldValue("paymentMethod", value);
+                  // Limpar campos quando mudar o método
+                  if (value === "PIX") {
+                    formik.setFieldValue("bankName", "");
+                    formik.setFieldValue("agency", "");
+                    formik.setFieldValue("account", "");
+                    formik.setFieldValue("accountType", "");
+                  } else if (value === "BANK_ACCOUNT") {
+                    formik.setFieldValue("pixKey", "");
+                    formik.setFieldValue("pixKeyType", "");
+                  }
+                }}
+              >
+                <SelectTrigger id="paymentMethod" className="mt-1">
+                  <SelectValue placeholder="Selecione o método de recebimento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="BANK_ACCOUNT">Conta Bancária</SelectItem>
+                  <SelectItem value="PIX">PIX</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Escolha como deseja receber os pagamentos da plataforma
+              </p>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="agency">Agência</Label>
-                <Input id="agency" {...formik.getFieldProps("agency")} />
-              </div>
+            {/* Campos de Conta Bancária */}
+            {formik.values.paymentMethod === "BANK_ACCOUNT" && (
+              <div className="space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                <h4 className="font-medium text-sm mb-3">Dados Bancários</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="bankName">Nome do Banco *</Label>
+                    <Input id="bankName" {...formik.getFieldProps("bankName")} />
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="account">Conta</Label>
-                <Input id="account" {...formik.getFieldProps("account")} />
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="agency">Agência *</Label>
+                    <Input id="agency" {...formik.getFieldProps("agency")} />
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="accountType">Tipo de Conta</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="account">Conta *</Label>
+                    <Input id="account" {...formik.getFieldProps("account")} />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="accountType">Tipo de Conta *</Label>
                 <Select
                   value={formik.values.accountType}
                   onValueChange={(value) => formik.setFieldValue("accountType", value)}
@@ -406,68 +480,94 @@ export default function PsychologistForm({ psychologist, onClose }: Props) {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="accountHolderName">Nome do Titular</Label>
-                <Input id="accountHolderName" {...formik.getFieldProps("accountHolderName")} />
-              </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="accountHolderName">Nome do Titular *</Label>
+                    <Input id="accountHolderName" {...formik.getFieldProps("accountHolderName")} />
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="cpf">CPF do Titular</Label>
-                <Input id="cpf" {...formik.getFieldProps("cpf")} />
+                  <div className="space-y-2">
+                    <Label htmlFor="cpf">CPF do Titular *</Label>
+                    <Input id="cpf" {...formik.getFieldProps("cpf")} />
+                  </div>
+                </div>
               </div>
+            )}
 
-              <div className="space-y-2">
-                <Label htmlFor="pixKeyType">Tipo de Chave PIX</Label>
-                <Select
-                  value={formik.values.pixKeyType}
-                  onValueChange={(value) => formik.setFieldValue("pixKeyType", value)}
-                >
-                  <SelectTrigger id="pixKeyType">
-                    <SelectValue placeholder="Selecione o tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="CPF">CPF</SelectItem>
-                    <SelectItem value="EMAIL">Email</SelectItem>
-                    <SelectItem value="TELEFONE">Telefone</SelectItem>
-                    <SelectItem value="ALEATORIA">Chave Aleatória</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* Campos de PIX */}
+            {formik.values.paymentMethod === "PIX" && (
+              <div className="space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                <h4 className="font-medium text-sm mb-3">Dados PIX</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="pixKeyType">Tipo de Chave PIX *</Label>
+                    <Select
+                      value={formik.values.pixKeyType}
+                      onValueChange={(value) => formik.setFieldValue("pixKeyType", value)}
+                    >
+                      <SelectTrigger id="pixKeyType">
+                        <SelectValue placeholder="Selecione o tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="CPF">CPF</SelectItem>
+                        <SelectItem value="EMAIL">Email</SelectItem>
+                        <SelectItem value="TELEFONE">Telefone</SelectItem>
+                        <SelectItem value="ALEATORIA">Chave Aleatória</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="pixKey">
-                  Chave PIX{" "}
-                  {formik.values.pixKeyType && <span className="text-red-500">*</span>}
-                </Label>
-                <Input
-                  id="pixKey"
-                  placeholder={
-                    formik.values.pixKeyType === "CPF"
-                      ? "000.000.000-00"
-                      : formik.values.pixKeyType === "EMAIL"
-                      ? "email@exemplo.com"
-                      : formik.values.pixKeyType === "TELEFONE"
-                      ? "(00) 00000-0000"
-                      : "Chave aleatória"
-                  }
-                  {...formik.getFieldProps("pixKey")}
-                  className={
-                    formik.errors.pixKey && formik.touched.pixKey ? "border-red-500" : ""
-                  }
-                />
-                {formik.errors.pixKey && formik.touched.pixKey && (
-                  <p className="text-sm text-red-500">{String(formik.errors.pixKey)}</p>
-                )}
+                  <div className="space-y-2">
+                    <Label htmlFor="pixKey">
+                      Chave PIX *
+                    </Label>
+                    <Input
+                      id="pixKey"
+                      placeholder={
+                        formik.values.pixKeyType === "CPF"
+                          ? "000.000.000-00"
+                          : formik.values.pixKeyType === "EMAIL"
+                          ? "email@exemplo.com"
+                          : formik.values.pixKeyType === "TELEFONE"
+                          ? "(00) 00000-0000"
+                          : "Chave aleatória"
+                      }
+                      {...formik.getFieldProps("pixKey")}
+                      className={
+                        formik.errors.pixKey && formik.touched.pixKey ? "border-red-500" : ""
+                      }
+                    />
+                    {formik.errors.pixKey && formik.touched.pixKey && (
+                      <p className="text-sm text-red-500">{String(formik.errors.pixKey)}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="accountHolderName">Nome do Titular *</Label>
+                    <Input id="accountHolderName" {...formik.getFieldProps("accountHolderName")} />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="cpf">CPF do Titular *</Label>
+                    <Input id="cpf" {...formik.getFieldProps("cpf")} />
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           <div className="flex gap-3 justify-end pt-4 border-t">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={formik.isSubmitting}>
               Cancelar
             </Button>
-            <Button type="submit">
-              {psychologist ? "Atualizar Psicólogo" : "Criar Psicólogo"}
+            <Button type="submit" disabled={formik.isSubmitting}>
+              {formik.isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {psychologist ? "Atualizando..." : "Criando..."}
+                </>
+              ) : (
+                psychologist ? "Atualizar Psicólogo" : "Criar Psicólogo"
+              )}
             </Button>
           </div>
         </form>

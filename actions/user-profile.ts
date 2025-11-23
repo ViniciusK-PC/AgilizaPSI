@@ -6,6 +6,7 @@ import { authOptions } from "@/lib/auth";
 
 export async function updateUserProfile(data: {
   name?: string;
+  phone?: string;
   image?: string;
 }) {
   try {
@@ -25,6 +26,10 @@ export async function updateUserProfile(data: {
       updateData.name = data.name;
     }
     
+    if (data.phone !== undefined) {
+      updateData.phone = data.phone;
+    }
+    
     if (data.image) {
       updateData.image = data.image;
     }
@@ -36,6 +41,7 @@ export async function updateUserProfile(data: {
         id: true,
         name: true,
         email: true,
+        phone: true,
         image: true,
         role: true,
       },

@@ -22,6 +22,7 @@ type Appointment = {
     id: string;
     name: string;
     email: string;
+    image?: string | null;
   } | null;
 };
 
@@ -78,9 +79,10 @@ export function useCreateAppointment() {
 
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
       toast.success("Agendamento criado com sucesso!");
+      return data;
     },
     onError: (error: Error) => {
       toast.error(error.message);

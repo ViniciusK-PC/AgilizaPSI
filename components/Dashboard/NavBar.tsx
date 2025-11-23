@@ -1,7 +1,7 @@
 
 "use client";
 
-import { LogOut } from "lucide-react";
+import { LogOut, Home } from "lucide-react";
 import { Button } from "@/components/ui/button"
 import { ModeToggle } from "../ModeToggle";
 import UserProfile from "./UserProfile";
@@ -13,11 +13,13 @@ import { useTabSession } from "@/hooks/useTabSession";
 import { clearTabSession } from "@/lib/tab-session";
 import { clearAdminLock, hasAdminLock } from "@/lib/admin-session-manager";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Navbar() {
   const { data: session } = useSession();
   const { session: tabSession } = useTabSession();
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
   
   // Garantir que só use sessionStorage após hidratação
   useEffect(() => {
@@ -50,7 +52,20 @@ export default function Navbar() {
   // Sempre renderizar o header para evitar problemas de hidratação
   // O conteúdo interno pode mudar após montagem
   return (
-    <header className="h-16 border-b border-border flex items-center justify-end px-6 bg-background">
+    <header className="h-16 border-b border-border flex items-center justify-between px-6 bg-background">
+      <div className="flex items-center gap-3">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => router.push("/")}
+          className="flex items-center gap-2"
+          title="Voltar para o início"
+        >
+          <Home className="w-4 h-4" />
+          <span className="hidden sm:inline">Início</span>
+        </Button>
+      </div>
       <div className="flex items-center gap-3">
         <ModeToggle/>
         {mounted ? (

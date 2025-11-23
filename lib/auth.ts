@@ -141,12 +141,22 @@ export const authOptions: NextAuthOptions = {
           token.role = dbUser.role;
           token.hasImage = !!dbUser.image;
           // Não incluir a imagem no token
+        } else {
+          // Se o usuário não existe mais no banco, invalidar o token
+          // Retornar null faz com que o NextAuth invalide a sessão
+          console.log("User not found in database, invalidating token for email:", token.email);
+          return null;
         }
       }
       
       return token;
     },
     async session({ session, token }) {
+      // Se o token for null ou não tiver dados essenciais, invalidar a sessão
+      if (!token || !token.email || !token.id) {
+        return null as any;
+      }
+      
       if (token && session.user) {
         session.user.id = token.id as string;
         session.user.name = token.name as string;

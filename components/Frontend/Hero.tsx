@@ -7,7 +7,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 
 const Hero = () => {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === "authenticated" && session;
 
   // Buscar estatísticas reais
   const { data: stats } = useQuery({
@@ -34,7 +35,7 @@ const Hero = () => {
   return (
     <div className="bg-gradient-to-br from-blue-950 via-blue-900 to-indigo-950 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-white">
       <div className="relative pb-20 pt-16 lg:pt-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className={`grid ${isAuthenticated ? 'lg:grid-cols-2' : 'lg:grid-cols-1'} gap-12 items-center`}>
           {/* Conteúdo Principal */}
           <div className="space-y-8">
             <div className="space-y-4">
@@ -101,7 +102,7 @@ const Hero = () => {
             </div>
 
             {/* Botão de Login se não estiver logado */}
-            {!session && (
+            {!isAuthenticated && (
               <div className="pt-4">
                 <Link
                   href="/login"
@@ -113,49 +114,51 @@ const Hero = () => {
             )}
           </div>
 
-          {/* Imagem/Ilustração */}
-          <div className="relative hidden lg:block">
-            <div className="relative z-10">
-              {psychologist?.image ? (
-                <div className="relative">
-                  <Image
-                    src={psychologist.image}
-                    alt={psychologist.name || "Psicóloga"}
-                    width={500}
-                    height={600}
-                    className="rounded-2xl shadow-2xl object-cover"
-                  />
-                  <div className="absolute -bottom-6 -left-6 bg-white rounded-xl p-4 shadow-xl">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-                        <Video className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">Consultas Online</p>
-                        <p className="text-sm text-gray-600">Disponíveis 24/7</p>
+          {/* Imagem/Ilustração - Só exibir se estiver logado */}
+          {isAuthenticated && (
+            <div className="relative hidden lg:block">
+              <div className="relative z-10">
+                {psychologist?.image ? (
+                  <div className="relative">
+                    <Image
+                      src={psychologist.image}
+                      alt={psychologist.name || "Psicóloga"}
+                      width={500}
+                      height={600}
+                      className="rounded-2xl shadow-2xl object-cover"
+                    />
+                    <div className="absolute -bottom-6 -left-6 bg-white rounded-xl p-4 shadow-xl">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                          <Video className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900">Consultas Online</p>
+                          <p className="text-sm text-gray-600">Disponíveis 24/7</p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ) : (
-                <div className="bg-white/10 rounded-2xl p-12 backdrop-blur-sm">
-                  <div className="space-y-4 text-center">
-                    <div className="w-32 h-32 bg-white/20 rounded-full mx-auto flex items-center justify-center">
-                      <Video className="w-16 h-16" />
+                ) : (
+                  <div className="bg-white/10 rounded-2xl p-12 backdrop-blur-sm">
+                    <div className="space-y-4 text-center">
+                      <div className="w-32 h-32 bg-white/20 rounded-full mx-auto flex items-center justify-center">
+                        <Video className="w-16 h-16" />
+                      </div>
+                      <h3 className="text-2xl font-bold">Atendimento Profissional</h3>
+                      <p className="text-blue-200">
+                        Consultas online e presenciais com psicólogos qualificados
+                      </p>
                     </div>
-                    <h3 className="text-2xl font-bold">Atendimento Profissional</h3>
-                    <p className="text-blue-200">
-                      Consultas online e presenciais com psicólogos qualificados
-                    </p>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+              
+              {/* Decoração de fundo */}
+              <div className="absolute -top-8 -right-8 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl"></div>
+              <div className="absolute -bottom-8 -left-8 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl"></div>
             </div>
-            
-            {/* Decoração de fundo */}
-            <div className="absolute -top-8 -right-8 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl"></div>
-            <div className="absolute -bottom-8 -left-8 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl"></div>
-          </div>
+          )}
         </div>
       </div>
     </div>

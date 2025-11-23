@@ -3,6 +3,7 @@
 import { X, Calendar, Clock, User, Mail, DollarSign, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 type Appointment = {
   id: string;
@@ -25,6 +26,7 @@ type Appointment = {
     id: string;
     name: string;
     email: string;
+    image?: string | null;
   } | null;
 };
 
@@ -127,13 +129,26 @@ export default function AppointmentDetails({ appointment, onClose }: Props) {
               <span>Paciente</span>
             </div>
             {appointment.patient ? (
-              <>
-                <p className="text-lg font-semibold">{appointment.patient.name}</p>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Mail className="w-4 h-4" />
-                  <span>{appointment.patient.email}</span>
+              <div className="flex items-center gap-4">
+                <Avatar className="w-16 h-16">
+                  <AvatarImage src={appointment.patient.image || undefined} alt={appointment.patient.name} />
+                  <AvatarFallback className="bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">
+                    {appointment.patient.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                      .toUpperCase()
+                      .slice(0, 2)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-lg font-semibold">{appointment.patient.name}</p>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Mail className="w-4 h-4" />
+                    <span>{appointment.patient.email}</span>
+                  </div>
                 </div>
-              </>
+              </div>
             ) : (
               <p className="text-muted-foreground">Sem paciente vinculado</p>
             )}

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Stethoscope, Video, Phone, Award, Clock } from "lucide-react";
 import { User } from "@prisma/client";
 import { useQuery } from "@tanstack/react-query";
+import { formatTimeBrasilia, filterPastSlots } from "@/lib/utils";
 
 type PsychologistWithDetails = User & {
   bio?: string | null;
@@ -35,8 +36,11 @@ export default function DoctorCard({ doctor, isInPerson = false }: {
     enabled: !!doctor.id,
   });
 
+  // Filtrar horários que já passaram (se for hoje)
+  const filteredSlots = filterPastSlots(slotsData?.availableSlots || [], today);
+  
   // Extrair apenas os horários de início dos slots disponíveis
-  const availableSlots = slotsData?.availableSlots?.map((slot: { startTime: string; endTime: string }) => slot.startTime) || [];
+  const availableSlots = filteredSlots.map((slot: { startTime: string; endTime: string }) => slot.startTime);
 
   // Formatar telefone
   const formatPhone = (phone: string) => {
@@ -57,6 +61,8 @@ export default function DoctorCard({ doctor, isInPerson = false }: {
     if (years === 1) return "1 ano de experiência";
     return `${years} anos de experiência`;
   };
+
+  const formatTime = formatTimeBrasilia;
 
   // Primeira especialidade ou especialização
   const primarySpecialty = doctor.specialties?.[0] || doctor.specialization || "Psicologia";
@@ -153,7 +159,7 @@ export default function DoctorCard({ doctor, isInPerson = false }: {
                 className="bg-blue-600 hover:bg-blue-700 text-sm text-white p-2 text-center rounded transition-colors"
                 href={`/appointment?psychologistId=${doctor.id}&date=${today}&time=${slot}&type=${isInPerson ? 'PRESENCIAL' : 'ONLINE'}`}
               >
-                {slot}
+                {formatTime(slot)}
               </Link>
             ))}
             <Link

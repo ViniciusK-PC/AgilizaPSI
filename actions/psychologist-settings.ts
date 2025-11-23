@@ -12,6 +12,8 @@ export type CreateSettingsProps = {
   acceptOnlineAppointments?: boolean;
   acceptInPersonAppointments?: boolean;
   autoConfirmAppointments?: boolean;
+  enableCheckout?: boolean;
+  pixKey?: string;
   bio?: string;
   specialties?: string[];
   languages?: string[];
@@ -31,19 +33,37 @@ export async function upsertPsychologistSettings(data: CreateSettingsProps) {
       };
     }
 
+    // Log para debug
+    console.log("Salvando configurações - enableCheckout:", settingsData.enableCheckout);
+    console.log("Tipo de enableCheckout:", typeof settingsData.enableCheckout);
+    console.log("Dados completos:", JSON.stringify(settingsData, null, 2));
+
+    // Garantir que enableCheckout seja um booleano explícito
+    const enableCheckoutValue = settingsData.enableCheckout !== undefined 
+      ? Boolean(settingsData.enableCheckout) 
+      : true;
+
+    const updateData = {
+      ...settingsData,
+      enableCheckout: enableCheckoutValue,
+    };
+
     const settings = await prismaClient.psychologistSettings.upsert({
       where: { psychologistId },
       create: {
         psychologistId,
-        ...settingsData,
+        ...updateData,
       },
-      update: settingsData,
+      update: updateData,
       include: {
         psychologist: {
           select: { id: true, name: true, email: true },
         },
       },
     });
+
+    console.log("Configurações salvas - enableCheckout:", settings.enableCheckout);
+    console.log("Tipo salvo:", typeof settings.enableCheckout);
 
     return {
       data: settings,

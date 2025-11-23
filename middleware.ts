@@ -6,9 +6,12 @@ export default withAuth(
     const token = req.nextauth.token;
     const pathname = req.nextUrl.pathname;
     
-    // IMPORTANTE: Não redirecionar admin de /dashboard para /dashboard/admin automaticamente
-    // Isso permite que múltiplas guias tenham sessões diferentes
-    // O layout client-side fará a verificação correta baseada no sessionStorage
+    // Permitir pacientes (USER) acessarem /patient-dashboard
+    // Bloquear acesso a rotas de dashboard de profissionais
+    if (token && token.role === "USER" && pathname.startsWith("/dashboard")) {
+      // Redirecionar pacientes para o dashboard deles
+      return NextResponse.redirect(new URL("/patient-dashboard", req.url));
+    }
     
     // Apenas proteger rotas admin: se não for admin tentando acessar rota admin, redirecionar
     // Isso garante que profissionais não acessem o painel admin
@@ -36,6 +39,6 @@ export default withAuth(
 );
 
 export const config = {
-  matcher: ["/dashboard/:path*"],
+  matcher: ["/dashboard/:path*", "/patient-dashboard/:path*"],
 };
 

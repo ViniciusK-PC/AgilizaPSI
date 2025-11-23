@@ -22,6 +22,12 @@ export default function DashboardPage() {
     
     const userRole = activeSession?.user?.role;
     
+    // Se for paciente (USER), redirecionar para home
+    if (userRole === 'USER') {
+      router.push('/');
+      return;
+    }
+    
     // Se for admin, redirecionar para dashboard admin
     if (userRole === 'ADMIN') {
       router.push('/dashboard/admin');
@@ -40,9 +46,12 @@ export default function DashboardPage() {
     );
   }
 
-  // Se for admin, não renderizar nada (será redirecionado)
-  if (isAuthenticated && activeSession?.user?.role === 'ADMIN') {
-    return null;
+  // Se for paciente ou admin, não renderizar nada (será redirecionado)
+  if (isAuthenticated) {
+    const userRole = activeSession?.user?.role;
+    if (userRole === 'USER' || userRole === 'ADMIN') {
+      return null;
+    }
   }
 
   return (

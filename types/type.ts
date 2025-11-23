@@ -42,6 +42,7 @@ export type UpdateAppointmentProps = {
     type?: AppointmentType;
     notes?: string;
     price?: number;
+    meetingLink?: string;
 }
 
 export type AppointmentFilterProps = {

@@ -72,9 +72,29 @@ export default function RegisterForm({ role = "USER" }: { role?: UserRole }) {
             router.push("/login");
           } else {
             setIsLoading(false);
-            // Redirecionar para a URL de redirect se houver, senão para o dashboard
-            const finalRedirect = redirectUrl || "/dashboard";
-            router.push(finalRedirect);
+            // Verificar o role do usuário após login
+            try {
+              const sessionResponse = await fetch("/api/auth/session");
+              const sessionData = await sessionResponse.json();
+              const userRole = sessionData?.user?.role;
+              
+              if (userRole === "USER") {
+                // Pacientes não têm acesso ao dashboard, redirecionar para perfil ou redirect (se for agendamento)
+                const finalRedirect = redirectUrl || "/profile";
+                router.push(finalRedirect);
+              } else if (userRole === "ADMIN") {
+                // Admin vai para dashboard admin
+                router.push("/dashboard/admin");
+              } else {
+                // Profissionais vão para dashboard ou redirect
+                const finalRedirect = redirectUrl || "/dashboard";
+                router.push(finalRedirect);
+              }
+            } catch (error) {
+              // Em caso de erro, redirecionar para home (pacientes) ou dashboard (outros)
+              const finalRedirect = redirectUrl || (role === "USER" ? "/" : "/dashboard");
+              router.push(finalRedirect);
+            }
             router.refresh(); // Forçar atualização da sessão
           }
         } catch (loginError) {

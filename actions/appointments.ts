@@ -3,6 +3,7 @@
 import { prismaClient } from "@/lib/db";
 import { CreateAppointmentProps, UpdateAppointmentProps, AppointmentFilterProps } from "@/types/type";
 import { AppointmentStatus } from "@prisma/client";
+import { createPayment } from "./payments";
 
 // CREATE - Criar novo agendamento
 export async function createAppointment(data: CreateAppointmentProps) {
@@ -86,6 +87,14 @@ export async function createAppointment(data: CreateAppointmentProps) {
       }
     }
 
+    // Gerar meetingLink automaticamente para consultas ONLINE
+    let meetingLink: string | undefined = undefined;
+    if (type === "ONLINE") {
+      const jitsiDomain = "meet.jit.si";
+      const roomId = `agilizapsi-${psychologistId}-${Date.now()}`.toLowerCase().replace(/[^a-z0-9]/g, "");
+      meetingLink = `https://${jitsiDomain}/${roomId}`;
+    }
+
     const newAppointment = await prismaClient.appointment.create({
       data: {
         psychologistId,
@@ -97,6 +106,7 @@ export async function createAppointment(data: CreateAppointmentProps) {
         type,
         notes,
         price,
+        meetingLink,
       },
       include: {
         psychologist: {
@@ -114,11 +124,25 @@ export async function createAppointment(data: CreateAppointmentProps) {
                 name: true,
                 email: true,
                 phone: true,
+                image: true,
               },
             }
           : undefined,
       },
     });
+
+    // Criar pagamento automaticamente se houver preço definido
+    if (price && price > 0) {
+      try {
+        await createPayment({
+          appointmentId: newAppointment.id,
+          amount: price,
+        });
+      } catch (error) {
+        // Log do erro mas não falha a criação do agendamento
+        console.error("Erro ao criar pagamento automaticamente:", error);
+      }
+    }
 
     return {
       data: newAppointment,
@@ -184,6 +208,7 @@ export async function getAppointments(filters?: AppointmentFilterProps) {
             name: true,
             email: true,
             phone: true,
+            image: true,
           },
         },
       },
@@ -211,6 +236,17 @@ export async function getAppointments(filters?: AppointmentFilterProps) {
 // READ - Buscar agendamento por ID
 export async function getAppointmentById(id: string) {
   try {
+    console.log("getAppointmentById - Buscando agendamento com ID:", id);
+    
+    if (!id || typeof id !== 'string') {
+      console.error("getAppointmentById - ID inválido:", id);
+      return {
+        data: null,
+        error: "ID do agendamento inválido",
+        status: 400,
+      };
+    }
+
     const appointment = await prismaClient.appointment.findUnique({
       where: { id },
       include: {
@@ -229,10 +265,13 @@ export async function getAppointmentById(id: string) {
             name: true,
             email: true,
             phone: true,
+            image: true,
           },
         },
       },
     });
+
+    console.log("getAppointmentById - Agendamento encontrado:", !!appointment);
 
     if (!appointment) {
       return {
@@ -249,7 +288,11 @@ export async function getAppointmentById(id: string) {
     };
   } catch (error: any) {
     console.error("Error fetching appointment:", error);
-    if (error.code === 'P2023') {
+    console.error("Error code:", error?.code);
+    console.error("Error message:", error?.message);
+    console.error("Error stack:", error?.stack);
+    
+    if (error.code === 'P2023' || error.code === 'P2025') {
       return {
         data: null,
         error: "Agendamento não encontrado",
@@ -258,7 +301,7 @@ export async function getAppointmentById(id: string) {
     }
     return {
       data: null,
-      error: "Erro ao buscar agendamento",
+      error: error?.message || "Erro ao buscar agendamento",
       status: 500,
     };
   }
@@ -333,6 +376,7 @@ export async function updateAppointment(id: string, data: UpdateAppointmentProps
     if (data.type) updateData.type = data.type;
     if (data.notes !== undefined) updateData.notes = data.notes;
     if (data.price !== undefined) updateData.price = data.price;
+    if (data.meetingLink !== undefined) updateData.meetingLink = data.meetingLink;
 
     const updatedAppointment = await prismaClient.appointment.update({
       where: { id },
@@ -352,6 +396,7 @@ export async function updateAppointment(id: string, data: UpdateAppointmentProps
             name: true,
             email: true,
             phone: true,
+            image: true,
           },
         },
       },
@@ -446,6 +491,8 @@ export async function getAvailableSlots(psychologistId: string, date: string) {
     }
 
     const appointmentDate = new Date(date);
+    appointmentDate.setHours(0, 0, 0, 0);
+    
     const appointments = await prismaClient.appointment.findMany({
       where: {
         psychologistId,
@@ -457,23 +504,115 @@ export async function getAvailableSlots(psychologistId: string, date: string) {
       orderBy: { startTime: "asc" },
     });
 
-    // Horário de trabalho padrão: 08:00 - 18:00
-    const workingHours = {
-      start: "08:00",
-      end: "18:00",
-    };
+    // Buscar disponibilidade configurada para esta data
+    let availability = null;
+    if (prismaClient.availability) {
+      try {
+        availability = await prismaClient.availability.findUnique({
+          where: {
+            psychologistId_date: {
+              psychologistId,
+              date: appointmentDate,
+            },
+          },
+        });
+      } catch (error) {
+        console.error("Erro ao buscar disponibilidade:", error);
+        // Se houver erro e o modelo existir, considerar como sem disponibilidade
+      }
+    }
 
-    const bookedSlots = appointments.map((apt) => ({
-      startTime: apt.startTime,
-      endTime: apt.endTime,
-    }));
+    // Se não houver disponibilidade configurada para esta data, retornar vazio
+    // O cliente só verá horários se o profissional tiver configurado na agenda
+    if (!availability) {
+      return {
+        data: {
+          date: appointmentDate,
+          workingHours: { start: "09:00", end: "22:00" },
+          bookedSlots: [],
+          availableSlots: [],
+        },
+        error: null,
+        status: 200,
+      };
+    }
 
+    // Se houver disponibilidade configurada e estiver marcada como indisponível
+    if (availability && !availability.isAvailable) {
+      return {
+        data: {
+          date: appointmentDate,
+          workingHours: { start: "09:00", end: "22:00" },
+          bookedSlots: [],
+          availableSlots: [],
+        },
+        error: null,
+        status: 200,
+      };
+    }
+
+    // Se houver horários específicos configurados, usar apenas esses
+    if (availability && availability.availableSlots.length > 0) {
+      const bookedSlots = appointments.map((apt) => ({
+        startTime: apt.startTime,
+        endTime: apt.endTime,
+      }));
+
+      // Função auxiliar para verificar sobreposição de horários
+      const hasOverlap = (slotStart: string, slotEnd: string, bookedStart: string, bookedEnd: string): boolean => {
+        // Converte horários para minutos para facilitar comparação
+        const toMinutes = (time: string): number => {
+          const [hours, minutes] = time.split(":").map(Number);
+          return hours * 60 + minutes;
+        };
+
+        const slotStartMin = toMinutes(slotStart);
+        const slotEndMin = toMinutes(slotEnd);
+        const bookedStartMin = toMinutes(bookedStart);
+        const bookedEndMin = toMinutes(bookedEnd);
+
+        // Verifica se há sobreposição:
+        // - O slot começa antes do agendamento terminar E
+        // - O slot termina depois do agendamento começar
+        return slotStartMin < bookedEndMin && slotEndMin > bookedStartMin;
+      };
+
+      // Filtrar apenas os horários configurados que não estão ocupados
+      const availableSlots = availability.availableSlots
+        .map((startTime) => {
+          // Calcular endTime baseado na duração padrão (60 minutos)
+          const [hours, minutes] = startTime.split(":").map(Number);
+          const endDate = new Date();
+          endDate.setHours(hours, minutes + 60, 0, 0);
+          const endTime = `${endDate.getHours().toString().padStart(2, "0")}:${endDate.getMinutes().toString().padStart(2, "0")}`;
+          return { startTime, endTime };
+        })
+        .filter((slot) => {
+          // Verificar se o slot não tem sobreposição com nenhum agendamento reservado
+          return !bookedSlots.some((booked) =>
+            hasOverlap(slot.startTime, slot.endTime, booked.startTime, booked.endTime)
+          );
+        });
+
+      return {
+        data: {
+          date: appointmentDate,
+          workingHours: { start: "09:00", end: "22:00" },
+          bookedSlots,
+          availableSlots,
+        },
+        error: null,
+        status: 200,
+      };
+    }
+
+    // Se a disponibilidade existe mas não tem horários configurados, retornar vazio
     return {
       data: {
         date: appointmentDate,
-        workingHours,
-        bookedSlots,
-        availableSlots: calculateAvailableSlots(workingHours, bookedSlots),
+        workingHours: { start: "09:00", end: "22:00" },
+        bookedSlots: [],
+        availableSlots: [],
       },
       error: null,
       status: 200,

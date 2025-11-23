@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import MedicalRecordForm from "./MedicalRecordForm";
+import { formatTimeBrasilia } from "@/lib/utils";
 
 type MedicalRecord = {
   id: string;
@@ -70,9 +71,7 @@ export default function MedicalRecordsList() {
     return new Date(dateString).toLocaleDateString("pt-BR");
   };
 
-  const formatTime = (timeString: string) => {
-    return timeString;
-  };
+  const formatTime = formatTimeBrasilia;
 
   const getPsychiatricFollowUpLabel = (value: string | null) => {
     switch (value) {

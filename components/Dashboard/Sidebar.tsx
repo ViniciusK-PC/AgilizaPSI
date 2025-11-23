@@ -4,7 +4,7 @@
 
 
 import { Bell, Home, Calendar, FileText, DollarSign, Video,
-  Package, Package2, ShoppingCart, TrendingUp, Users, Settings, BarChart3 } from "lucide-react";
+  Package, Package2, ShoppingCart, TrendingUp, Users, Settings, BarChart3, CalendarDays, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "../ui/badge";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useQuery } from "@tanstack/react-query";
 
 
 
@@ -21,6 +22,23 @@ export default function Sidebar() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState("dashboard")
 
+  // Buscar contagem de mensagens não lidas
+  const { data: unreadCounts } = useQuery({
+    queryKey: ["unread-messages-count", session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return {};
+      const response = await fetch(`/api/chat/unread?psychologistId=${session.user.id}`);
+      if (!response.ok) return {};
+      const data = await response.json();
+      return data.data || {};
+    },
+    enabled: !!session?.user?.id && session?.user?.role === "PSICOLOGO",
+    refetchInterval: 10000, // Atualizar a cada 10 segundos
+  });
+
+  // Calcular total de mensagens não lidas
+  const totalUnread = unreadCounts ? Object.values(unreadCounts).reduce((sum: number, count: any) => sum + (count || 0), 0) : 0;
+
   // Se for admin, não mostrar sidebar (será redirecionado)
   if (session?.user?.role === "ADMIN") {
     return null;
@@ -28,14 +46,15 @@ export default function Sidebar() {
     
       const navItems = [
         { id: "dashboard", label: "Dashboard", icon: Home, href:"/dashboard"},
+        { id: "schedule", label: "Agenda", icon: CalendarDays, href:"/dashboard/schedule"},
         { id: "appointments", label: "Agendamentos", icon: Calendar, href:"/dashboard/appointments"},
+        { id: "messages", label: "Mensagens", icon: MessageSquare, href:"/dashboard/messages"},
         { id: "medical-records", label: "Prontuários", icon: FileText, href:"/dashboard/medical-records"},
         { id: "financial", label: "Financeiro", icon: DollarSign, href:"/dashboard/financial"},
         { id: "analytics", label: "Relatórios", icon: BarChart3, href:"/dashboard/analytics"},
         { id: "virtual-room", label: "Sala Virtual", icon: Video, href:"/dashboard/virtual-room"},
         { id: "doctors", label: "Psicólogos", icon: Users, href:"/dashboard/doctors"},
-        { id: "settings", label: "Configurações", icon: Settings, href:"/dashboard/settings"},   
-      
+        { id: "settings", label: "Configurações", icon: Settings, href:"/dashboard/settings"}
       ]
     return (
     <div className="flex h-screen bg-background">
@@ -55,6 +74,7 @@ export default function Sidebar() {
         <nav className="flex-1 p-4 space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon
+            const showBadge = item.id === "messages" && totalUnread > 0;
             return (              <button
                 key={item.id}
                 onClick={() => {
@@ -70,7 +90,12 @@ export default function Sidebar() {
                 )}
               >
                 <Icon className="w-5 h-5" />
-                <span>{item.label}</span>
+                <span className="flex-1">{item.label}</span>
+                {showBadge && (
+                  <Badge variant="destructive" className="ml-auto h-5 min-w-5 flex items-center justify-center px-1.5 text-xs">
+                    {totalUnread > 99 ? "99+" : totalUnread}
+                  </Badge>
+                )}
               </button>
             )
           })}

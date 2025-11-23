@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import AppointmentFormik from "./AppointmentFormik";
 import AppointmentDetails from "./AppointmentDetails";
 import { useAppointments, useDeleteAppointment } from "@/hooks/useAppointments";
@@ -38,6 +39,7 @@ type Appointment = {
     id: string;
     name: string;
     email: string;
+    image?: string | null;
   } | null;
 };
 
@@ -217,11 +219,24 @@ export default function AppointmentsList() {
                       </TableCell>
                       <TableCell>
                         {appointment.patient ? (
-                          <div>
-                            <p className="font-medium">{appointment.patient.name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {appointment.patient.email}
-                            </p>
+                          <div className="flex items-center gap-3">
+                            <Avatar className="w-10 h-10">
+                              <AvatarImage src={appointment.patient.image || undefined} alt={appointment.patient.name} />
+                              <AvatarFallback className="bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-xs">
+                                {appointment.patient.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .toUpperCase()
+                                  .slice(0, 2)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium">{appointment.patient.name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {appointment.patient.email}
+                              </p>
+                            </div>
                           </div>
                         ) : (
                           <span className="text-muted-foreground">Sem paciente</span>

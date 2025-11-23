@@ -47,6 +47,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     // Verificar redirecionamentos baseados em role
     const userRole = activeSession?.user?.role;
 
+    // Bloquear pacientes (USER) de acessar qualquer dashboard
+    if (userRole === 'USER') {
+      router.push('/');
+      return;
+    }
+
     // Verificar se esta guia de admin perdeu o lock (outra guia fez login como admin)
     if (userRole === 'ADMIN' && typeof window !== 'undefined') {
       if (isOtherTabAdmin() && !hasAdminLock()) {

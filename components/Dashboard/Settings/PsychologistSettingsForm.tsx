@@ -1,18 +1,21 @@
 "use client";
 
-import { Settings as SettingsIcon, Clock, DollarSign, Globe } from "lucide-react";
+import { Settings as SettingsIcon, Clock, DollarSign, Globe, CreditCard } from "lucide-react";
+import AvailabilityManager from "./AvailabilityManager";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import toast from "react-hot-toast";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useTabSession } from "@/hooks/useTabSession";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
 const validationSchema = Yup.object({
@@ -27,6 +30,7 @@ export default function PsychologistSettingsForm() {
   const { data: session } = useSession();
   const { session: tabSession } = useTabSession();
   const router = useRouter();
+  const queryClient = useQueryClient();
   
   // Usar sessão da guia (sessionStorage) se disponível, senão usar sessão do NextAuth (cookie)
   const activeSession = tabSession || session;
@@ -57,6 +61,8 @@ export default function PsychologistSettingsForm() {
       acceptOnlineAppointments: existingSettings?.acceptOnlineAppointments ?? true,
       acceptInPersonAppointments: existingSettings?.acceptInPersonAppointments ?? true,
       autoConfirmAppointments: existingSettings?.autoConfirmAppointments ?? false,
+      enableCheckout: existingSettings?.enableCheckout ?? true,
+      pixKey: existingSettings?.pixKey || "",
       bio: existingSettings?.bio || "",
       specialties: existingSettings?.specialties?.join(", ") || "",
       languages: existingSettings?.languages?.join(", ") || "",
@@ -80,10 +86,15 @@ export default function PsychologistSettingsForm() {
           acceptOnlineAppointments: values.acceptOnlineAppointments,
           acceptInPersonAppointments: values.acceptInPersonAppointments,
           autoConfirmAppointments: values.autoConfirmAppointments,
+          enableCheckout: Boolean(values.enableCheckout), // Garantir que seja booleano
+          pixKey: values.pixKey || undefined,
           bio: values.bio || undefined,
           specialties: values.specialties.split(",").map((s) => s.trim()).filter(Boolean),
           languages: values.languages.split(",").map((l) => l.trim()).filter(Boolean),
         };
+
+        console.log("Enviando payload - enableCheckout:", payload.enableCheckout);
+        console.log("Payload completo:", JSON.stringify(payload, null, 2));
 
         const response = await fetch("/api/settings/psychologist", {
           method: "POST",
@@ -92,13 +103,18 @@ export default function PsychologistSettingsForm() {
         });
 
         if (response.ok) {
+          const responseData = await response.json();
+          console.log("Resposta da API:", responseData);
           toast.success("Configurações salvas com sucesso!");
+          // Invalidar cache para buscar as configurações atualizadas
+          queryClient.invalidateQueries({ queryKey: ["psychologist-settings", psychologistId] });
           // Redirecionar para o dashboard após 1 segundo
           setTimeout(() => {
             router.push("/dashboard");
           }, 1000);
         } else {
           const data = await response.json();
+          console.error("Erro ao salvar:", data);
           toast.error(data.error || "Erro ao salvar configurações");
         }
       } catch (error) {
@@ -121,6 +137,7 @@ export default function PsychologistSettingsForm() {
         acceptOnlineAppointments: existingSettings.acceptOnlineAppointments ?? true,
         acceptInPersonAppointments: existingSettings.acceptInPersonAppointments ?? true,
         autoConfirmAppointments: existingSettings.autoConfirmAppointments ?? false,
+        enableCheckout: existingSettings.enableCheckout ?? true,
         bio: existingSettings.bio || "",
         specialties: existingSettings.specialties?.join(", ") || "",
         languages: existingSettings.languages?.join(", ") || "",
@@ -246,6 +263,54 @@ export default function PsychologistSettingsForm() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Configurações de Pagamento */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <CreditCard className="w-5 h-5" />
+              <CardTitle>Configurações de Pagamento</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="enableCheckout" className="cursor-pointer">
+                  Ativar Checkout de Pagamento
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Quando ativado, os pacientes serão redirecionados para a página de checkout após agendar uma consulta
+                </p>
+              </div>
+              <Switch
+                id="enableCheckout"
+                checked={formik.values.enableCheckout}
+                onCheckedChange={(checked) => formik.setFieldValue("enableCheckout", checked)}
+              />
+            </div>
+            <Separator />
+            <div className="space-y-2">
+              <Label htmlFor="pixKey">Chave PIX</Label>
+              <Input
+                id="pixKey"
+                type="text"
+                placeholder="CPF, CNPJ, Email, Telefone ou Chave Aleatória"
+                value={formik.values.pixKey}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+              <p className="text-xs text-muted-foreground">
+                Configure sua chave PIX para gerar QR Codes de pagamento automaticamente. 
+                Pode ser CPF, CNPJ, email, telefone (formato: +5511999999999) ou chave aleatória.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Gerenciar Disponibilidade */}
+        {psychologistId && (
+          <AvailabilityManager psychologistId={psychologistId} />
+        )}
 
         {/* Perfil Profissional */}
         <Card>
