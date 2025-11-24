@@ -10,12 +10,24 @@ export type CreateWithdrawalProps = {
   method?: string;
   bankAccountId?: string;
   notes?: string;
+  // Dados para PIX
+  pixKey?: string;
+  pixKeyType?: string;
+  // Dados para transferência bancária
+  bankAccountData?: {
+    bankName?: string;
+    agency?: string;
+    account?: string;
+    accountType?: string;
+    accountHolderName?: string;
+    cpf?: string;
+  };
 };
 
 // CREATE - Criar solicitação de saque
 export async function createWithdrawal(data: CreateWithdrawalProps) {
   try {
-    const { psychologistId, amount, method, bankAccountId, notes } = data;
+    const { psychologistId, amount, method, bankAccountId, notes, pixKey, pixKeyType, bankAccountData } = data;
 
     // Validar ObjectID
     if (!psychologistId || !isValidObjectId(psychologistId)) {
@@ -85,13 +97,56 @@ export async function createWithdrawal(data: CreateWithdrawalProps) {
       };
     }
 
+    // Se não usar conta salva, criar/atualizar dados bancários temporários
+    let finalBankAccountId = bankAccountId;
+    
+    if (!bankAccountId && (method === "PIX" || method === "BANK_TRANSFER")) {
+      // Criar registro temporário de dados bancários para este saque
+      // Isso permite que o saque tenha os dados mesmo sem salvar no perfil
+      const tempBankAccount = await prismaClient.bankAccount.upsert({
+        where: { userId: psychologistId },
+        update: {
+          paymentMethod: method === "PIX" ? "PIX" : "BANK_ACCOUNT",
+          ...(method === "PIX" && pixKey ? {
+            pixKey,
+            pixKeyType: pixKeyType || "CPF",
+          } : {}),
+          ...(method === "BANK_TRANSFER" && bankAccountData ? {
+            bankName: bankAccountData.bankName || null,
+            agency: bankAccountData.agency || null,
+            account: bankAccountData.account || null,
+            accountType: bankAccountData.accountType || null,
+            accountHolderName: bankAccountData.accountHolderName || null,
+            cpf: bankAccountData.cpf || null,
+          } : {}),
+        },
+        create: {
+          userId: psychologistId,
+          paymentMethod: method === "PIX" ? "PIX" : "BANK_ACCOUNT",
+          ...(method === "PIX" && pixKey ? {
+            pixKey,
+            pixKeyType: pixKeyType || "CPF",
+          } : {}),
+          ...(method === "BANK_TRANSFER" && bankAccountData ? {
+            bankName: bankAccountData.bankName || null,
+            agency: bankAccountData.agency || null,
+            account: bankAccountData.account || null,
+            accountType: bankAccountData.accountType || null,
+            accountHolderName: bankAccountData.accountHolderName || null,
+            cpf: bankAccountData.cpf || null,
+          } : {}),
+        },
+      });
+      finalBankAccountId = tempBankAccount.id;
+    }
+
     // Criar saque
     const withdrawal = await prismaClient.withdrawal.create({
       data: {
         psychologistId,
         amount,
         method: method || null,
-        bankAccountId: bankAccountId || null,
+        bankAccountId: finalBankAccountId || null,
         notes: notes || null,
         status: "PENDING",
       },

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Server, Database, Mail, Lock, Globe, Save } from "lucide-react";
+import { Server, Database, Mail, Lock, Globe, Save, DollarSign } from "lucide-react";
 import toast from "react-hot-toast";
 import { useFormik } from "formik";
 
@@ -52,6 +52,7 @@ export default function SystemSettings() {
       allowPublicRegistration: settings?.allowPublicRegistration ?? true,
       requireEmailVerification: settings?.requireEmailVerification ?? true,
       timezone: settings?.timezone || "America/Sao_Paulo",
+      platformPixKey: settings?.platformPixKey || "",
     },
     enableReinitialize: true,
     onSubmit: async (values) => {
@@ -189,6 +190,42 @@ export default function SystemSettings() {
               <div>
                 <p className="text-gray-600 dark:text-gray-400">Autenticação</p>
                 <p className="font-semibold">NextAuth.js</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Configurações de Pagamento - Chave PIX da Plataforma */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-green-600" />
+              <CardTitle>Chave PIX da Plataforma</CardTitle>
+            </div>
+            <CardDescription>
+              Configure a chave PIX da plataforma para receber pagamentos dos pacientes
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="platformPixKey">Chave PIX da Plataforma</Label>
+              <Input
+                id="platformPixKey"
+                type="text"
+                placeholder="CPF, CNPJ, Email, Telefone ou Chave Aleatória"
+                value={formik.values.platformPixKey}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+              <p className="text-xs text-muted-foreground">
+                Esta chave PIX será usada para receber pagamentos dos pacientes. 
+                O QR Code gerado no checkout usará esta chave. 
+                Pode ser CPF, CNPJ, email, telefone (formato: +5511999999999) ou chave aleatória.
+              </p>
+              <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">
+                  💡 Importante: Os pagamentos dos pacientes serão recebidos nesta chave PIX da plataforma.
+                </p>
               </div>
             </div>
           </CardContent>

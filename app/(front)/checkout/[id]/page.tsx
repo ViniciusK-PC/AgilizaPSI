@@ -27,7 +27,8 @@ import {
   CheckCircle2,
   Loader2,
   ArrowLeft,
-  Hourglass
+  Hourglass,
+  Timer
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -103,6 +104,7 @@ export default function CheckoutPage() {
       
       const data = await response.json();
       console.log("Dados do agendamento recebidos:", data);
+      console.log("Preço do agendamento:", data.data?.price);
       return data.data;
     },
     enabled: !!appointmentId && sessionStatus !== "unauthenticated",
@@ -129,8 +131,9 @@ export default function CheckoutPage() {
   });
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null);
+  const [pixTimer, setPixTimer] = useState<number | null>(null); // Timer em segundos (10 minutos = 600 segundos)
 
-  // Buscar configurações do psicólogo para obter chave PIX
+  // Buscar chave PIX do profissional (para gerar QR Code no checkout)
   const { data: psychologistSettings } = useQuery({
     queryKey: ["psychologist-settings", appointment?.psychologist?.id],
     queryFn: async () => {
@@ -143,11 +146,11 @@ export default function CheckoutPage() {
     enabled: !!appointment?.psychologist?.id,
   });
 
-  // Gerar código PIX quando método PIX for selecionado
-  const pixCode = selectedPaymentMethod === "PIX" && psychologistSettings?.pixKey && appointment?.price
+  // Gerar código PIX quando método PIX for selecionado (usando chave PIX do profissional)
+  const pixCode = selectedPaymentMethod === "PIX" && psychologistSettings?.pixKey && appointment
     ? generatePixCode(
         psychologistSettings.pixKey,
-        appointment.price || 150,
+        appointment.price && appointment.price > 0 ? appointment.price : 150,
         `Consulta ${appointment.type === "ONLINE" ? "Online" : "Presencial"} - ${appointment.psychologist.name}`,
         appointment.psychologist.name
       )
@@ -178,6 +181,39 @@ export default function CheckoutPage() {
       setSelectedPaymentMethod(payment.method as PaymentMethod);
     }
   }, [payment?.method, selectedPaymentMethod]);
+
+  // Iniciar temporizador quando PIX for selecionado
+  useEffect(() => {
+    if (selectedPaymentMethod === "PIX" && pixCode) {
+      // Iniciar timer de 10 minutos (600 segundos)
+      setPixTimer(600);
+    } else {
+      setPixTimer(null);
+    }
+  }, [selectedPaymentMethod, pixCode]);
+
+  // Contador regressivo do timer PIX
+  useEffect(() => {
+    if (pixTimer === null || pixTimer <= 0) return;
+
+    const interval = setInterval(() => {
+      setPixTimer((prev) => {
+        if (prev === null || prev <= 1) {
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [pixTimer]);
+
+  // Formatar tempo do timer (MM:SS)
+  const formatTimer = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  };
 
   // Processar pagamento
   const processPayment = useMutation({
@@ -564,37 +600,107 @@ export default function CheckoutPage() {
                       ))}
                     </div>
 
-                    {/* QR Code PIX */}
-                    {selectedPaymentMethod === "PIX" && pixCode && (
+                    {/* QR Code PIX - Gerado automaticamente quando PIX é selecionado */}
+                    {selectedPaymentMethod === "PIX" && (
                       <div className="mt-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
-                        <h3 className="text-sm font-semibold mb-4 text-gray-700 dark:text-gray-300">
-                          QR Code PIX
-                        </h3>
-                        <div className="flex flex-col items-center space-y-4">
-                          <div className="bg-white p-4 rounded-lg border-2 border-gray-300">
-                            <img
-                              src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(pixCode)}`}
-                              alt="QR Code PIX"
-                              className="w-64 h-64"
-                            />
-                          </div>
-                          <div className="text-center space-y-2">
-                            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                              Valor: {formatCurrency(appointment?.price || 150)}
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              Escaneie o QR Code com o app do seu banco para pagar
-                            </p>
-                            <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                              <p className="text-xs font-mono text-blue-900 dark:text-blue-100 break-all">
-                                {psychologistSettings?.pixKey}
-                              </p>
-                              <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                                Chave PIX do profissional
-                              </p>
+                        {pixCode ? (
+                          <>
+                            <div className="flex items-center justify-between mb-4">
+                              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                QR Code PIX
+                              </h3>
+                              {pixTimer !== null && pixTimer > 0 && (
+                                <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                                  <Clock className="w-4 h-4 text-red-600 dark:text-red-400" />
+                                  <span className="text-sm font-mono font-bold text-red-600 dark:text-red-400">
+                                    {formatTimer(pixTimer)}
+                                  </span>
+                                </div>
+                              )}
+                              {pixTimer === 0 && (
+                                <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                                  <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                                    QR Code Expirado
+                                  </span>
+                                </div>
+                              )}
                             </div>
+                            {pixTimer !== null && pixTimer > 0 ? (
+                              <div className="flex flex-col items-center space-y-4">
+                                <div className="bg-white p-4 rounded-lg border-2 border-gray-300 shadow-sm">
+                                  <img
+                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(pixCode)}`}
+                                    alt="QR Code PIX"
+                                    className="w-64 h-64"
+                                  />
+                                </div>
+                                <div className="text-center space-y-2 w-full">
+                                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Valor: {formatCurrency(appointment?.price && appointment.price > 0 ? appointment.price : 150)}
+                                  </p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    Escaneie o QR Code com o app do seu banco para pagar
+                                  </p>
+                                  <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                                    ⏱️ Este QR Code expira em {formatTimer(pixTimer)}
+                                  </p>
+                                  <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                                    <p className="text-xs text-blue-700 dark:text-blue-300 mb-1 font-medium">
+                                      Chave PIX do profissional:
+                                    </p>
+                                    <p className="text-xs font-mono text-blue-900 dark:text-blue-100 break-all">
+                                      {psychologistSettings?.pixKey}
+                                    </p>
+                                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                                      O pagamento será recebido pelo profissional
+                                    </p>
+                                  </div>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="mt-2"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(pixCode);
+                                      toast.success("Código PIX copiado!");
+                                    }}
+                                  >
+                                    Copiar código PIX
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : pixTimer === 0 ? (
+                              <div className="text-center py-6">
+                                <p className="text-sm font-medium text-amber-600 dark:text-amber-400 mb-2">
+                                  ⚠️ O QR Code expirou
+                                </p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                                  O QR Code PIX tem validade de 10 minutos. Selecione PIX novamente para gerar um novo código.
+                                </p>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    // Reiniciar timer ao clicar
+                                    setPixTimer(600);
+                                  }}
+                                >
+                                  Gerar Novo QR Code
+                                </Button>
+                              </div>
+                            ) : null}
+                          </>
+                        ) : (
+                          <div className="text-center py-6">
+                            <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-2">
+                              ⚠️ Carregando informações do PIX...
+                            </p>
+                            {!psychologistSettings?.pixKey && (
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                O profissional ainda não configurou uma chave PIX. Entre em contato para mais informações.
+                              </p>
+                            )}
                           </div>
-                        </div>
+                        )}
                       </div>
                     )}
 

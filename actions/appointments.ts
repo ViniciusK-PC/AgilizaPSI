@@ -9,6 +9,7 @@ import { createPayment } from "./payments";
 export async function createAppointment(data: CreateAppointmentProps) {
   try {
     const { psychologistId, patientId, date, startTime, endTime, duration, type, notes, price } = data;
+    console.log("createAppointment - Preço recebido:", price);
 
     // Validar se o psicólogo existe
     try {
@@ -62,6 +63,8 @@ export async function createAppointment(data: CreateAppointmentProps) {
 
     // Verificar conflito de horário
     const appointmentDate = new Date(date);
+    appointmentDate.setHours(0, 0, 0, 0);
+    
     const existingAppointments = await prismaClient.appointment.findMany({
       where: {
         psychologistId,
@@ -72,13 +75,28 @@ export async function createAppointment(data: CreateAppointmentProps) {
       },
     });
 
+    // Função auxiliar para verificar sobreposição de horários
+    const hasOverlap = (slotStart: string, slotEnd: string, bookedStart: string, bookedEnd: string): boolean => {
+      // Converte horários para minutos para facilitar comparação
+      const toMinutes = (time: string): number => {
+        const [hours, minutes] = time.split(":").map(Number);
+        return hours * 60 + minutes;
+      };
+
+      const slotStartMin = toMinutes(slotStart);
+      const slotEndMin = toMinutes(slotEnd);
+      const bookedStartMin = toMinutes(bookedStart);
+      const bookedEndMin = toMinutes(bookedEnd);
+
+      // Verifica se há sobreposição:
+      // - O slot começa antes do agendamento terminar E
+      // - O slot termina depois do agendamento começar
+      return slotStartMin < bookedEndMin && slotEndMin > bookedStartMin;
+    };
+
     // Verificar se há conflito de horário
     for (const existing of existingAppointments) {
-      if (
-        (startTime >= existing.startTime && startTime < existing.endTime) ||
-        (endTime > existing.startTime && endTime <= existing.endTime) ||
-        (startTime <= existing.startTime && endTime >= existing.endTime)
-      ) {
+      if (hasOverlap(startTime, endTime, existing.startTime, existing.endTime)) {
         return {
           data: null,
           error: "Conflito de horário. Este horário já está reservado.",
@@ -95,6 +113,7 @@ export async function createAppointment(data: CreateAppointmentProps) {
       meetingLink = `https://${jitsiDomain}/${roomId}`;
     }
 
+    console.log("createAppointment - Salvando agendamento com preço:", price);
     const newAppointment = await prismaClient.appointment.create({
       data: {
         psychologistId,
@@ -105,7 +124,7 @@ export async function createAppointment(data: CreateAppointmentProps) {
         duration,
         type,
         notes,
-        price,
+        price: price || null, // Garantir que seja null se não fornecido, não undefined
         meetingLink,
       },
       include: {
@@ -336,7 +355,9 @@ export async function updateAppointment(id: string, data: UpdateAppointmentProps
 
     // Se estiver atualizando data/horário, verificar conflito
     if (data.date || data.startTime || data.endTime) {
-      const appointmentDate = data.date ? new Date(data.date) : existingAppointment.date;
+      let appointmentDate = data.date ? new Date(data.date) : existingAppointment.date;
+      appointmentDate.setHours(0, 0, 0, 0);
+      
       const startTime = data.startTime || existingAppointment.startTime;
       const endTime = data.endTime || existingAppointment.endTime;
 
@@ -351,12 +372,27 @@ export async function updateAppointment(id: string, data: UpdateAppointmentProps
         },
       });
 
+      // Função auxiliar para verificar sobreposição de horários
+      const hasOverlap = (slotStart: string, slotEnd: string, bookedStart: string, bookedEnd: string): boolean => {
+        // Converte horários para minutos para facilitar comparação
+        const toMinutes = (time: string): number => {
+          const [hours, minutes] = time.split(":").map(Number);
+          return hours * 60 + minutes;
+        };
+
+        const slotStartMin = toMinutes(slotStart);
+        const slotEndMin = toMinutes(slotEnd);
+        const bookedStartMin = toMinutes(bookedStart);
+        const bookedEndMin = toMinutes(bookedEnd);
+
+        // Verifica se há sobreposição:
+        // - O slot começa antes do agendamento terminar E
+        // - O slot termina depois do agendamento começar
+        return slotStartMin < bookedEndMin && slotEndMin > bookedStartMin;
+      };
+
       for (const existing of conflictingAppointments) {
-        if (
-          (startTime >= existing.startTime && startTime < existing.endTime) ||
-          (endTime > existing.startTime && endTime <= existing.endTime) ||
-          (startTime <= existing.startTime && endTime >= existing.endTime)
-        ) {
+        if (hasOverlap(startTime, endTime, existing.startTime, existing.endTime)) {
           return {
             data: null,
             error: "Conflito de horário. Este horário já está reservado.",

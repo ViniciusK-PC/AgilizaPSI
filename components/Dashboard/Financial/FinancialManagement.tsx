@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import toast from "react-hot-toast";
 import { Loader2 } from "lucide-react";
 
@@ -56,6 +57,17 @@ export default function FinancialManagement() {
   const [withdrawalAmount, setWithdrawalAmount] = useState("");
   const [withdrawalMethod, setWithdrawalMethod] = useState<string>("");
   const [withdrawalNotes, setWithdrawalNotes] = useState("");
+  const [useSavedAccount, setUseSavedAccount] = useState(true);
+  const [bankAccountData, setBankAccountData] = useState({
+    bankName: "",
+    agency: "",
+    account: "",
+    accountType: "",
+    accountHolderName: "",
+    cpf: "",
+  });
+  const [pixKey, setPixKey] = useState("");
+  const [pixKeyType, setPixKeyType] = useState<string>("CPF");
 
   const { data: stats, isLoading: loadingStats } = useQuery<FinancialStats>({
     queryKey: ["financial-stats", session?.user?.id],
@@ -112,15 +124,30 @@ export default function FinancialManagement() {
   // Criar saque
   const createWithdrawal = useMutation({
     mutationFn: async () => {
+      // Preparar dados do saque
+      const withdrawalData: any = {
+        amount: parseFloat(withdrawalAmount),
+        method: withdrawalMethod,
+        notes: withdrawalNotes || undefined,
+      };
+
+      // Se usar conta salva, usar o ID
+      if (useSavedAccount && bankAccount?.id) {
+        withdrawalData.bankAccountId = bankAccount.id;
+      } else {
+        // Incluir dados bancários ou PIX no corpo da requisição
+        if (withdrawalMethod === "PIX") {
+          withdrawalData.pixKey = pixKey;
+          withdrawalData.pixKeyType = pixKeyType;
+        } else if (withdrawalMethod === "BANK_TRANSFER") {
+          withdrawalData.bankAccountData = bankAccountData;
+        }
+      }
+
       const response = await fetch("/api/withdrawals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: parseFloat(withdrawalAmount),
-          method: withdrawalMethod,
-          bankAccountId: bankAccount?.id || undefined,
-          notes: withdrawalNotes || undefined,
-        }),
+        body: JSON.stringify(withdrawalData),
       });
       if (!response.ok) {
         const error = await response.json();
@@ -134,6 +161,17 @@ export default function FinancialManagement() {
       setWithdrawalAmount("");
       setWithdrawalMethod("");
       setWithdrawalNotes("");
+      setUseSavedAccount(true);
+      setBankAccountData({
+        bankName: "",
+        agency: "",
+        account: "",
+        accountType: "",
+        accountHolderName: "",
+        cpf: "",
+      });
+      setPixKey("");
+      setPixKeyType("CPF");
       queryClient.invalidateQueries({ queryKey: ["available-balance"] });
       queryClient.invalidateQueries({ queryKey: ["withdrawals"] });
     },
@@ -200,12 +238,16 @@ export default function FinancialManagement() {
               </div>
               <Dialog open={showWithdrawalModal} onOpenChange={setShowWithdrawalModal}>
                 <DialogTrigger asChild>
-                  <Button className="gap-2" disabled={!balance || balance.availableBalance <= 0}>
+                  <Button 
+                    className="gap-2" 
+                    disabled={loadingBalance}
+                    onClick={() => setShowWithdrawalModal(true)}
+                  >
                     <Wallet className="w-4 h-4" />
                     Solicitar Saque
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Solicitar Saque</DialogTitle>
                   </DialogHeader>
@@ -217,45 +259,232 @@ export default function FinancialManagement() {
                         type="number"
                         step="0.01"
                         min="0.01"
-                        max={balance?.availableBalance || 0}
+                        max={balance?.availableBalance || 999999}
                         placeholder="0,00"
                         value={withdrawalAmount}
                         onChange={(e) => setWithdrawalAmount(e.target.value)}
                       />
-                      <p className="text-xs text-muted-foreground">
-                        Saldo disponível: {formatCurrency(balance?.availableBalance || 0)}
-                      </p>
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground">
+                          Saldo disponível: {formatCurrency(balance?.availableBalance || 0)}
+                        </p>
+                        {balance && balance.availableBalance <= 0 && (
+                          <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                            ⚠️ Você não possui saldo disponível para saque no momento.
+                          </p>
+                        )}
+                      </div>
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="method">Método de Recebimento</Label>
-                      <Select value={withdrawalMethod} onValueChange={setWithdrawalMethod}>
+                      <Select value={withdrawalMethod} onValueChange={(value) => {
+                        setWithdrawalMethod(value);
+                        // Limpar campos quando mudar o método
+                        if (value === "PIX") {
+                          setBankAccountData({
+                            bankName: "",
+                            agency: "",
+                            account: "",
+                            accountType: "",
+                            accountHolderName: "",
+                            cpf: "",
+                          });
+                        } else {
+                          setPixKey("");
+                          setPixKeyType("CPF");
+                        }
+                      }}>
                         <SelectTrigger id="method">
                           <SelectValue placeholder="Selecione o método" />
                         </SelectTrigger>
                         <SelectContent>
-                          {bankAccount?.paymentMethod === "PIX" && (
-                            <SelectItem value="PIX">PIX - {bankAccount?.pixKey}</SelectItem>
-                          )}
-                          {bankAccount?.paymentMethod === "BANK_ACCOUNT" && (
-                            <SelectItem value="BANK_TRANSFER">
-                              Transferência Bancária - {bankAccount?.bankName} {bankAccount?.account}
-                            </SelectItem>
-                          )}
-                          {!bankAccount?.paymentMethod && (
-                            <>
-                              <SelectItem value="PIX">PIX</SelectItem>
-                              <SelectItem value="BANK_TRANSFER">Transferência Bancária</SelectItem>
-                            </>
-                          )}
+                          <SelectItem value="PIX">PIX</SelectItem>
+                          <SelectItem value="BANK_TRANSFER">Transferência Bancária</SelectItem>
                         </SelectContent>
                       </Select>
-                      {!bankAccount && (
-                        <p className="text-xs text-amber-600 dark:text-amber-400">
-                          ⚠️ Configure seus dados bancários nas configurações para facilitar os saques
-                        </p>
-                      )}
                     </div>
+
+                    {/* Campos para PIX */}
+                    {withdrawalMethod === "PIX" && (
+                      <div className="space-y-4 p-4 border rounded-lg bg-gray-50 dark:bg-gray-900">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-base font-semibold">Dados para Recebimento via PIX</Label>
+                          {bankAccount?.paymentMethod === "PIX" && bankAccount?.pixKey && (
+                            <div className="flex items-center gap-2">
+                              <Switch
+                                checked={useSavedAccount}
+                                onCheckedChange={(checked) => {
+                                  setUseSavedAccount(checked);
+                                  if (checked && bankAccount) {
+                                    setPixKey(bankAccount.pixKey || "");
+                                    setPixKeyType(bankAccount.pixKeyType || "CPF");
+                                  }
+                                }}
+                              />
+                              <Label className="text-sm">Usar chave PIX salva</Label>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {(!useSavedAccount || !bankAccount?.pixKey) && (
+                          <>
+                            <div className="space-y-2">
+                              <Label htmlFor="pixKeyType">Tipo de Chave PIX</Label>
+                              <Select value={pixKeyType} onValueChange={setPixKeyType}>
+                                <SelectTrigger id="pixKeyType">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="CPF">CPF</SelectItem>
+                                  <SelectItem value="CNPJ">CNPJ</SelectItem>
+                                  <SelectItem value="EMAIL">E-mail</SelectItem>
+                                  <SelectItem value="TELEFONE">Telefone</SelectItem>
+                                  <SelectItem value="ALEATORIA">Chave Aleatória</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="pixKey">Chave PIX</Label>
+                              <Input
+                                id="pixKey"
+                                placeholder={
+                                  pixKeyType === "CPF" ? "000.000.000-00" :
+                                  pixKeyType === "CNPJ" ? "00.000.000/0000-00" :
+                                  pixKeyType === "EMAIL" ? "seu@email.com" :
+                                  pixKeyType === "TELEFONE" ? "(00) 00000-0000" :
+                                  "Chave aleatória"
+                                }
+                                value={pixKey}
+                                onChange={(e) => setPixKey(e.target.value)}
+                              />
+                            </div>
+                          </>
+                        )}
+
+                        {useSavedAccount && bankAccount?.pixKey && (
+                          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+                            <p className="text-sm font-medium">Chave PIX salva:</p>
+                            <p className="text-sm text-muted-foreground">
+                              {bankAccount.pixKeyType}: {bankAccount.pixKey}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Campos para Transferência Bancária */}
+                    {withdrawalMethod === "BANK_TRANSFER" && (
+                      <div className="space-y-4 p-4 border rounded-lg bg-gray-50 dark:bg-gray-900">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-base font-semibold">Dados Bancários para Recebimento</Label>
+                          {bankAccount?.paymentMethod === "BANK_ACCOUNT" && (
+                            <div className="flex items-center gap-2">
+                              <Switch
+                                checked={useSavedAccount}
+                                onCheckedChange={(checked) => {
+                                  setUseSavedAccount(checked);
+                                  if (checked && bankAccount) {
+                                    setBankAccountData({
+                                      bankName: bankAccount.bankName || "",
+                                      agency: bankAccount.agency || "",
+                                      account: bankAccount.account || "",
+                                      accountType: bankAccount.accountType || "",
+                                      accountHolderName: bankAccount.accountHolderName || "",
+                                      cpf: bankAccount.cpf || "",
+                                    });
+                                  }
+                                }}
+                              />
+                              <Label className="text-sm">Usar conta salva</Label>
+                            </div>
+                          )}
+                        </div>
+
+                        {(!useSavedAccount || !bankAccount?.paymentMethod) && (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="bankName">Nome do Banco</Label>
+                              <Input
+                                id="bankName"
+                                placeholder="Ex: Banco do Brasil"
+                                value={bankAccountData.bankName}
+                                onChange={(e) => setBankAccountData({ ...bankAccountData, bankName: e.target.value })}
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="agency">Agência</Label>
+                              <Input
+                                id="agency"
+                                placeholder="0000"
+                                value={bankAccountData.agency}
+                                onChange={(e) => setBankAccountData({ ...bankAccountData, agency: e.target.value })}
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="account">Conta</Label>
+                              <Input
+                                id="account"
+                                placeholder="00000-0"
+                                value={bankAccountData.account}
+                                onChange={(e) => setBankAccountData({ ...bankAccountData, account: e.target.value })}
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="accountType">Tipo de Conta</Label>
+                              <Select
+                                value={bankAccountData.accountType}
+                                onValueChange={(value) => setBankAccountData({ ...bankAccountData, accountType: value })}
+                              >
+                                <SelectTrigger id="accountType">
+                                  <SelectValue placeholder="Selecione" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="CORRENTE">Conta Corrente</SelectItem>
+                                  <SelectItem value="POUPANCA">Conta Poupança</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="accountHolderName">Nome do Titular</Label>
+                              <Input
+                                id="accountHolderName"
+                                placeholder="Nome completo"
+                                value={bankAccountData.accountHolderName}
+                                onChange={(e) => setBankAccountData({ ...bankAccountData, accountHolderName: e.target.value })}
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="cpf">CPF do Titular</Label>
+                              <Input
+                                id="cpf"
+                                placeholder="000.000.000-00"
+                                value={bankAccountData.cpf}
+                                onChange={(e) => setBankAccountData({ ...bankAccountData, cpf: e.target.value })}
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {useSavedAccount && bankAccount?.paymentMethod === "BANK_ACCOUNT" && (
+                          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+                            <p className="text-sm font-medium">Conta salva:</p>
+                            <p className="text-sm text-muted-foreground">
+                              {bankAccount.bankName} - Ag: {bankAccount.agency} - Conta: {bankAccount.account} ({bankAccount.accountType})
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Titular: {bankAccount.accountHolderName} - CPF: {bankAccount.cpf}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     <div className="space-y-2">
                       <Label htmlFor="notes">Observações (opcional)</Label>
@@ -281,8 +510,10 @@ export default function FinancialManagement() {
                         disabled={
                           !withdrawalAmount ||
                           parseFloat(withdrawalAmount) <= 0 ||
-                          parseFloat(withdrawalAmount) > (balance?.availableBalance || 0) ||
+                          (balance && parseFloat(withdrawalAmount) > balance.availableBalance) ||
                           !withdrawalMethod ||
+                          (withdrawalMethod === "PIX" && !useSavedAccount && !pixKey && (!bankAccount?.pixKey || !useSavedAccount)) ||
+                          (withdrawalMethod === "BANK_TRANSFER" && !useSavedAccount && (!bankAccountData.bankName || !bankAccountData.agency || !bankAccountData.account || !bankAccountData.accountHolderName || !bankAccountData.cpf) && (!bankAccount?.paymentMethod || !useSavedAccount)) ||
                           createWithdrawal.isPending
                         }
                       >

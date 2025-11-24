@@ -30,6 +30,7 @@ export type ClinicSettingsData = {
   // Configurações de Pagamento
   defaultPaymentMethod?: string;
   enableOnlinePayment?: boolean;
+  platformPixKey?: string; // Chave PIX da plataforma para receber pagamentos
   
   // Configurações Gerais
   maintenanceMode?: boolean;
@@ -105,10 +106,12 @@ export async function updateClinicSettings(data: ClinicSettingsData) {
         },
       });
     } else {
-      // Atualizar existente
+      // Atualizar existente - remover campos que não podem ser atualizados
+      const { id, createdAt, updatedAt, clinic, ...updateData } = data as any;
+      
       settings = await prismaClient.clinicSettings.update({
         where: { id: settings.id },
-        data,
+        data: updateData,
       });
     }
 

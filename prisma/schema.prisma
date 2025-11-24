@@ -452,6 +452,7 @@ model ClinicSettings {
   // Configurações de Pagamento
   defaultPaymentMethod  String?  // PIX, CREDIT_CARD, etc.
   enableOnlinePayment   Boolean  @default(true)
+  platformPixKey       String?  // Chave PIX da plataforma para receber pagamentos dos pacientes
   
   // Configurações Gerais
   maintenanceMode       Boolean  @default(false)

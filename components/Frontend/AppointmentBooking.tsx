@@ -122,6 +122,15 @@ export default function AppointmentBooking({
 
       // Criar agendamento vinculando o paciente autenticado
       try {
+        // Buscar o preço padrão do psicólogo
+        const appointmentPrice = selectedPsychologist.psychologistSettings?.defaultPrice;
+        console.log("Criando agendamento com preço:", appointmentPrice);
+        console.log("Configurações do psicólogo:", selectedPsychologist.psychologistSettings);
+        console.log("defaultPrice do psicólogo:", selectedPsychologist.psychologistSettings?.defaultPrice);
+        
+        // Garantir que o preço seja um número válido ou undefined
+        const finalPrice = appointmentPrice && appointmentPrice > 0 ? appointmentPrice : undefined;
+        
         const result = await createAppointment.mutateAsync({
           psychologistId: values.psychologistId,
           patientId: patientId || null, // Vincular o paciente autenticado
@@ -131,8 +140,10 @@ export default function AppointmentBooking({
           duration: 60, // Padrão de 60 minutos
           type: values.type,
           notes: values.notes || undefined,
-          price: selectedPsychologist.psychologistSettings?.defaultAppointmentPrice || undefined,
+          price: finalPrice,
         });
+        
+        console.log("Agendamento criado com preço final:", finalPrice);
 
         // A resposta da API vem como { data: {...}, error: null }
         // O agendamento está em result.data
@@ -152,9 +163,9 @@ export default function AppointmentBooking({
             // Usar window.location para garantir o redirecionamento
             window.location.href = `/checkout/${appointmentId}`;
           } else {
-            console.log("Checkout desabilitado, redirecionando para home");
-            toast.success("Agendamento criado com sucesso!");
-            router.push("/");
+            console.log("Checkout desabilitado, redirecionando para confirmação:", `/appointment-confirmation/${appointmentId}`);
+            // Redirecionar para página de confirmação
+            window.location.href = `/appointment-confirmation/${appointmentId}`;
           }
         } else {
           console.error("ID do agendamento não encontrado. Result:", result);

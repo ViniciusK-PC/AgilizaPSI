@@ -2,6 +2,7 @@
 
 import { Settings as SettingsIcon, Clock, DollarSign, Globe, CreditCard } from "lucide-react";
 import AvailabilityManager from "./AvailabilityManager";
+import ConsultationPriceManager from "./ConsultationPriceManager";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -87,13 +88,19 @@ export default function PsychologistSettingsForm() {
           acceptInPersonAppointments: values.acceptInPersonAppointments,
           autoConfirmAppointments: values.autoConfirmAppointments,
           enableCheckout: Boolean(values.enableCheckout), // Garantir que seja booleano
-          pixKey: values.pixKey || undefined,
+          pixKey: values.pixKey?.trim() || "", // Sempre enviar (string vazia será convertida para null na action)
           bio: values.bio || undefined,
           specialties: values.specialties.split(",").map((s) => s.trim()).filter(Boolean),
           languages: values.languages.split(",").map((l) => l.trim()).filter(Boolean),
         };
 
-        console.log("Enviando payload - enableCheckout:", payload.enableCheckout);
+        console.log("=== ENVIANDO PAYLOAD ===");
+        console.log("enableCheckout:", payload.enableCheckout);
+        console.log("pixKey no payload:", payload.pixKey);
+        console.log("Tipo de pixKey:", typeof payload.pixKey);
+        console.log("pixKey é string vazia?", payload.pixKey === "");
+        console.log("pixKey é null?", payload.pixKey === null);
+        console.log("pixKey é undefined?", payload.pixKey === undefined);
         console.log("Payload completo:", JSON.stringify(payload, null, 2));
 
         const response = await fetch("/api/settings/psychologist", {
@@ -105,13 +112,28 @@ export default function PsychologistSettingsForm() {
         if (response.ok) {
           const responseData = await response.json();
           console.log("Resposta da API:", responseData);
+          console.log("pixKey salvo na resposta:", responseData.data?.pixKey);
           toast.success("Configurações salvas com sucesso!");
           // Invalidar cache para buscar as configurações atualizadas
           queryClient.invalidateQueries({ queryKey: ["psychologist-settings", psychologistId] });
-          // Redirecionar para o dashboard após 1 segundo
-          setTimeout(() => {
-            router.push("/dashboard");
-          }, 1000);
+          // Atualizar o formulário com os valores salvos para garantir sincronização
+          if (responseData.data) {
+            formik.setValues({
+              psychologistId: psychologistId || "",
+              workingHoursStart: responseData.data.workingHoursStart || "08:00",
+              workingHoursEnd: responseData.data.workingHoursEnd || "18:00",
+              defaultSessionDuration: responseData.data.defaultSessionDuration || 60,
+              defaultPrice: responseData.data.defaultPrice || 150,
+              acceptOnlineAppointments: responseData.data.acceptOnlineAppointments ?? true,
+              acceptInPersonAppointments: responseData.data.acceptInPersonAppointments ?? true,
+              autoConfirmAppointments: responseData.data.autoConfirmAppointments ?? false,
+              enableCheckout: responseData.data.enableCheckout ?? true,
+              pixKey: responseData.data.pixKey || "",
+              bio: responseData.data.bio || "",
+              specialties: responseData.data.specialties?.join(", ") || "",
+              languages: responseData.data.languages?.join(", ") || "",
+            });
+          }
         } else {
           const data = await response.json();
           console.error("Erro ao salvar:", data);
@@ -151,6 +173,11 @@ export default function PsychologistSettingsForm() {
         <h1 className="text-3xl font-bold">Configurações do Psicólogo</h1>
         <p className="text-muted-foreground">Personalize sua agenda e perfil</p>
       </div>
+
+      {/* Gerenciador de Valor da Consulta */}
+      {psychologistId && (
+        <ConsultationPriceManager />
+      )}
 
       <form onSubmit={formik.handleSubmit} className="space-y-6">
         {/* Horário de Trabalho */}
@@ -287,22 +314,6 @@ export default function PsychologistSettingsForm() {
                 checked={formik.values.enableCheckout}
                 onCheckedChange={(checked) => formik.setFieldValue("enableCheckout", checked)}
               />
-            </div>
-            <Separator />
-            <div className="space-y-2">
-              <Label htmlFor="pixKey">Chave PIX</Label>
-              <Input
-                id="pixKey"
-                type="text"
-                placeholder="CPF, CNPJ, Email, Telefone ou Chave Aleatória"
-                value={formik.values.pixKey}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              />
-              <p className="text-xs text-muted-foreground">
-                Configure sua chave PIX para gerar QR Codes de pagamento automaticamente. 
-                Pode ser CPF, CNPJ, email, telefone (formato: +5511999999999) ou chave aleatória.
-              </p>
             </div>
           </CardContent>
         </Card>
