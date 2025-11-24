@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Buscar profissional pelo token de acesso
-    const professional = await prismaClient.user.findUnique({
+    const professional = await prismaClient.user.findFirst({
       where: { accessToken: token },
     });
 

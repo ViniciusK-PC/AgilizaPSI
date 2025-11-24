@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { signIn } from "next-auth/react";
-import { getAdminSession, getProfessionalSession, clearAdminSession, clearProfessionalSession } from "@/lib/multi-session";
+import { getAdminSession, getProfessionalSession, clearAdminSession, clearProfessionalSession, SavedSession } from "@/lib/multi-session";
 import { Button } from "@/components/ui/button";
 import { Shield, User } from "lucide-react";
 import toast from "react-hot-toast";
@@ -11,8 +11,8 @@ import toast from "react-hot-toast";
 export default function SessionSwitcher() {
   const { data: session } = useSession();
   const [mounted, setMounted] = useState(false);
-  const [adminSession, setAdminSession] = useState(null);
-  const [professionalSession, setProfessionalSession] = useState(null);
+  const [adminSession, setAdminSession] = useState<SavedSession | null>(null);
+  const [professionalSession, setProfessionalSession] = useState<SavedSession | null>(null);
 
   useEffect(() => {
     // Só acessar localStorage após montagem (evitar erro de hidratação)
@@ -40,7 +40,7 @@ export default function SessionSwitcher() {
       // Fazer login com as credenciais do admin salvo
       // Nota: Isso requer que tenhamos a senha ou token de acesso do admin
       // Por enquanto, vamos apenas redirecionar para a página de login do admin
-      toast.info("Redirecionando para login do admin...");
+      toast("Redirecionando para login do admin...");
       window.location.href = "/login?email=" + encodeURIComponent(savedAdmin.email);
     } catch (error) {
       console.error("Error restoring admin session:", error);
@@ -56,7 +56,7 @@ export default function SessionSwitcher() {
     }
 
     try {
-      toast.info("Redirecionando para login do profissional...");
+      toast("Redirecionando para login do profissional...");
       window.location.href = "/login?email=" + encodeURIComponent(savedProfessional.email);
     } catch (error) {
       console.error("Error restoring professional session:", error);

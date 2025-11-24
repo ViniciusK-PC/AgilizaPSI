@@ -1,0 +1,14 @@
+Código,Tipo,Descrição
+RF01,Funcional,Diferentes Perfis de Usuários
+RF02,Funcional,Gerenciamento da Agenda
+RF03,Funcional,Gerenciamento de Pacientes
+RF04,Funcional,Prontuário Eletrônico
+RF05,Funcional,Anexo de Exames
+RF06,Funcional,Permissão de Acesso
+RNF01,Não Funcional,Dados e informações sensíveis criptografadas
+RNF02,Não Funcional,Sistema de recuperação dos dados
+RNF03,Não Funcional,Interface intuitiva e de fácil acesso
+RNF04,Não Funcional,Sistema escalável
+RNF05,Não Funcional,Documentação atualizada sobre o sistema
+
+

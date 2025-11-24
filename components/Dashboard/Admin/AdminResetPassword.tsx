@@ -157,7 +157,7 @@ export default function AdminResetPassword() {
               </div>
               {formik.touched.currentPassword && formik.errors.currentPassword && (
                 <p className="text-sm text-red-500 dark:text-red-400">
-                  {formik.errors.currentPassword}
+                  {String(formik.errors.currentPassword)}
                 </p>
               )}
             </div>
@@ -188,7 +188,7 @@ export default function AdminResetPassword() {
               </div>
               {formik.touched.newPassword && formik.errors.newPassword && (
                 <p className="text-sm text-red-500 dark:text-red-400">
-                  {formik.errors.newPassword}
+                  {String(formik.errors.newPassword)}
                 </p>
               )}
             </div>
@@ -219,7 +219,7 @@ export default function AdminResetPassword() {
               </div>
               {formik.touched.confirmPassword && formik.errors.confirmPassword && (
                 <p className="text-sm text-red-500 dark:text-red-400">
-                  {formik.errors.confirmPassword}
+                  {String(formik.errors.confirmPassword)}
                 </p>
               )}
             </div>

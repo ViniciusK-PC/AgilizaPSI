@@ -3,6 +3,7 @@ import { createAppointment, getAppointments } from "@/actions/appointments";
 import { CreateAppointmentProps, AppointmentFilterProps } from "@/types/type";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { prismaClient } from "@/lib/db";
 
 // POST - Criar novo agendamento
 export async function POST(request: NextRequest) {
@@ -55,6 +56,11 @@ export async function GET(request: NextRequest) {
       dateTo: searchParams.get("dateTo") || undefined,
     };
 
+    // Se for um paciente (USER) logado, garantir que só veja suas próprias consultas
+    if (session?.user?.role === "USER" && session.user.id) {
+      filters.patientId = session.user.id; // Forçar filtro pelo paciente logado
+    }
+
     // Se for um psicólogo logado e não houver psychologistId nos filtros, filtrar automaticamente pelo psicólogo logado
     if (session?.user?.role === "PSICOLOGO" && !filters.psychologistId && session.user.id) {
       filters.psychologistId = session.user.id;
@@ -65,7 +71,17 @@ export async function GET(request: NextRequest) {
       (key) => filters[key as keyof AppointmentFilterProps] === undefined && delete filters[key as keyof AppointmentFilterProps]
     );
 
-    const result = await getAppointments(filters);
+    // Buscar clinicId do psicólogo logado para filtrar por clínica
+    let clinicId: string | undefined = undefined;
+    if (session?.user?.role === "PSICOLOGO" && session.user.id) {
+      const psychologist = await prismaClient.user.findUnique({
+        where: { id: session.user.id },
+        select: { clinicId: true },
+      });
+      clinicId = psychologist?.clinicId || undefined;
+    }
+
+    const result = await getAppointments(filters, clinicId);
 
     return NextResponse.json(
       { data: result.data, error: result.error },

@@ -154,7 +154,7 @@ export default function AdminEditName() {
               />
               {formik.touched.name && formik.errors.name && (
                 <p className="text-sm text-red-500 dark:text-red-400">
-                  {formik.errors.name}
+                  {String(formik.errors.name)}
                 </p>
               )}
             </div>

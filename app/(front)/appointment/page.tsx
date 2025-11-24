@@ -38,7 +38,7 @@ function AppointmentContent() {
   if (status === "loading") {
     return (
       <div className="text-center py-12">
-        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+        <div className="w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
         <p className="text-gray-600">Carregando...</p>
       </div>
     );

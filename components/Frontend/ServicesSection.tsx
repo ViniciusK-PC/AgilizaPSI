@@ -49,14 +49,14 @@ export default function ServicesSection() {
                 className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-800"
               >
                 <div className={`w-16 h-16 rounded-xl flex items-center justify-center mb-6 ${
-                service.color === 'blue' ? 'bg-blue-100' : 
-                service.color === 'indigo' ? 'bg-indigo-100' : 
-                'bg-purple-100'
+                service.color === 'blue' ? 'bg-green-100 dark:bg-green-900/30' : 
+                service.color === 'indigo' ? 'bg-green-100 dark:bg-green-900/30' : 
+                'bg-green-100 dark:bg-green-900/30'
               }`}>
                   <Icon className={`w-8 h-8 ${
-                    service.color === 'blue' ? 'text-blue-600' : 
-                    service.color === 'indigo' ? 'text-indigo-600' : 
-                    'text-purple-600'
+                    service.color === 'blue' ? 'text-green-600 dark:text-green-400' : 
+                    service.color === 'indigo' ? 'text-green-600 dark:text-green-400' : 
+                    'text-green-600 dark:text-green-400'
                   }`} />
                 </div>
                 
@@ -71,7 +71,7 @@ export default function ServicesSection() {
                 <ul className="space-y-3 mb-6">
                   {service.features.map((feature, idx) => (
                     <li key={idx} className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                      <div className="w-2 h-2 bg-blue-600 dark:bg-blue-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-green-600 dark:bg-green-500 rounded-full"></div>
                       <span className="text-sm">{feature}</span>
                     </li>
                   ))}
@@ -80,9 +80,9 @@ export default function ServicesSection() {
                 <Link
                   href="/appointment"
                   className={`inline-flex items-center justify-center w-full py-3 px-6 text-white rounded-lg font-semibold transition-colors ${
-                    service.color === 'blue' ? 'bg-blue-600 hover:bg-blue-700' : 
-                    service.color === 'indigo' ? 'bg-indigo-600 hover:bg-indigo-700' : 
-                    'bg-purple-600 hover:bg-purple-700'
+                    service.color === 'blue' ? 'bg-green-600 hover:bg-green-700' : 
+                    service.color === 'indigo' ? 'bg-green-600 hover:bg-green-700' : 
+                    'bg-green-600 hover:bg-green-700'
                   }`}
                 >
                   Agendar {service.title}
@@ -95,21 +95,21 @@ export default function ServicesSection() {
         {/* Benefícios */}
         <div className="mt-20 grid md:grid-cols-3 gap-6">
           <div className="text-center p-6">
-            <Shield className="w-12 h-12 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
+            <Shield className="w-12 h-12 text-green-600 dark:text-green-400 mx-auto mb-4" />
             <h4 className="font-bold text-lg mb-2 dark:text-white">Confidencialidade</h4>
             <p className="text-gray-600 dark:text-gray-400 text-sm">
               Seus dados e conversas são totalmente confidenciais e protegidos
             </p>
           </div>
           <div className="text-center p-6">
-            <Clock className="w-12 h-12 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
+            <Clock className="w-12 h-12 text-green-600 dark:text-green-400 mx-auto mb-4" />
             <h4 className="font-bold text-lg mb-2 dark:text-white">Flexibilidade</h4>
             <p className="text-gray-600 dark:text-gray-400 text-sm">
               Horários flexíveis que se adaptam à sua rotina
             </p>
           </div>
           <div className="text-center p-6">
-            <Users className="w-12 h-12 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
+            <Users className="w-12 h-12 text-green-600 dark:text-green-400 mx-auto mb-4" />
             <h4 className="font-bold text-lg mb-2 dark:text-white">Profissionalismo</h4>
             <p className="text-gray-600 dark:text-gray-400 text-sm">
               Psicólogos qualificados e experientes para seu atendimento

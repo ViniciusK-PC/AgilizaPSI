@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DollarSign, Edit2, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,12 +30,14 @@ export default function ConsultationPriceManager() {
       return data.data;
     },
     enabled: !!psychologistId,
-    onSuccess: (data) => {
-      if (data?.defaultPrice) {
-        setPrice(data.defaultPrice.toString());
-      }
-    },
   });
+
+  // Atualizar preço quando os dados forem carregados
+  useEffect(() => {
+    if (settings?.defaultPrice) {
+      setPrice(settings.defaultPrice.toString());
+    }
+  }, [settings]);
 
   // Atualizar preço
   const updatePrice = useMutation({
@@ -121,11 +123,11 @@ export default function ConsultationPriceManager() {
   }
 
   return (
-    <Card className="border-2 border-blue-200 dark:border-blue-800 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
+    <Card className="border-2 border-green-200 dark:border-green-800 bg-gradient-to-br from-green-50 to-green-50 dark:from-green-900/20 dark:to-green-900/20">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <DollarSign className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <DollarSign className="w-5 h-5 text-green-600 dark:text-green-400" />
             <CardTitle className="text-lg">Valor da Consulta</CardTitle>
           </div>
           {!isEditing && (
@@ -202,7 +204,7 @@ export default function ConsultationPriceManager() {
           <div className="space-y-4">
             <div className="text-center py-4">
               <p className="text-sm text-muted-foreground mb-2">Valor Atual</p>
-              <p className="text-4xl font-bold text-blue-600 dark:text-blue-400">
+              <p className="text-4xl font-bold text-green-600 dark:text-green-400">
                 {formatCurrency(settings?.defaultPrice || 150)}
               </p>
             </div>

@@ -129,12 +129,22 @@ export async function createPsychologist(data: CreatePsychologistProps) {
 }
 
 // READ - Listar todos os psicólogos
-export async function getAllPsychologists() {
+export async function getAllPsychologists(clinicId?: string, psychologistId?: string) {
   try {
+    const where: any = {
+      role: UserRole.PSICOLOGO,
+    };
+
+    // Priorizar filtro por clínica: se clinicId for fornecido, apenas psicólogos da mesma clínica
+    if (clinicId) {
+      where.clinicId = clinicId;
+    } else if (psychologistId) {
+      // Se não houver clinicId, filtrar por psychologistId (mostrar apenas o próprio psicólogo)
+      where.id = psychologistId;
+    }
+
     const psychologists = await prismaClient.user.findMany({
-      where: {
-        role: UserRole.PSICOLOGO,
-      },
+      where,
       include: {
         bankAccount: true,
         psychologistSettings: true,
@@ -167,6 +177,7 @@ export async function getPsychologistById(id: string) {
       include: {
         bankAccount: true,
         psychologistSettings: true,
+        clinic: true,
         _count: {
           select: {
             appointmentsAsPsychologist: true,

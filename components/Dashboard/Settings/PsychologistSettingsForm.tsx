@@ -90,8 +90,8 @@ export default function PsychologistSettingsForm() {
           enableCheckout: Boolean(values.enableCheckout), // Garantir que seja booleano
           pixKey: values.pixKey?.trim() || "", // Sempre enviar (string vazia será convertida para null na action)
           bio: values.bio || undefined,
-          specialties: values.specialties.split(",").map((s) => s.trim()).filter(Boolean),
-          languages: values.languages.split(",").map((l) => l.trim()).filter(Boolean),
+          specialties: values.specialties.split(",").map((s: string) => s.trim()).filter(Boolean),
+          languages: values.languages.split(",").map((l: string) => l.trim()).filter(Boolean),
         };
 
         console.log("=== ENVIANDO PAYLOAD ===");
@@ -160,6 +160,7 @@ export default function PsychologistSettingsForm() {
         acceptInPersonAppointments: existingSettings.acceptInPersonAppointments ?? true,
         autoConfirmAppointments: existingSettings.autoConfirmAppointments ?? false,
         enableCheckout: existingSettings.enableCheckout ?? true,
+        pixKey: existingSettings.pixKey || "",
         bio: existingSettings.bio || "",
         specialties: existingSettings.specialties?.join(", ") || "",
         languages: existingSettings.languages?.join(", ") || "",

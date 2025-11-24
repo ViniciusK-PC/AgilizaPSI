@@ -3,6 +3,7 @@ import { createPayment, getPayments } from "@/actions/payments";
 import { PaymentStatus } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { prismaClient } from "@/lib/db";
 
 export const dynamic = 'force-dynamic';
 
@@ -46,13 +47,28 @@ export async function GET(request: NextRequest) {
       filters.status = searchParams.get("status") as PaymentStatus;
     }
     
-    // Se for psicólogo, só pode ver seus próprios pagamentos
-    // Se for admin, pode ver todos (não filtra)
-    if (session.user.role === "PSICOLOGO") {
-      filters.psychologistId = session.user.id;
+    // Buscar clinicId do psicólogo logado para filtrar por clínica
+    let clinicId: string | undefined = undefined;
+    let psychologistId: string | undefined = undefined;
+    
+    if (session.user.role === "PSICOLOGO" && session.user.id) {
+      const psychologist = await prismaClient.user.findUnique({
+        where: { id: session.user.id },
+        select: { clinicId: true },
+      });
+      
+      if (psychologist?.clinicId) {
+        // Se tiver clinicId, mostrar todos os pagamentos da clínica
+        clinicId = psychologist.clinicId;
+      } else {
+        // Se não tiver clinicId, mostrar apenas os pagamentos do próprio psicólogo
+        psychologistId = session.user.id;
+        filters.psychologistId = psychologistId;
+      }
     } else if (searchParams.get("psychologistId")) {
       // Admin pode filtrar por psicólogo específico
-      filters.psychologistId = searchParams.get("psychologistId");
+      psychologistId = searchParams.get("psychologistId") || undefined;
+      filters.psychologistId = psychologistId;
     }
 
     if (searchParams.get("appointmentId")) {
@@ -69,7 +85,7 @@ export async function GET(request: NextRequest) {
 
     const limit = searchParams.get("limit") ? parseInt(searchParams.get("limit")!) : undefined;
 
-    const result = await getPayments(filters);
+    const result = await getPayments(filters, clinicId);
     
     // Aplicar limite se especificado
     let data = result.data;

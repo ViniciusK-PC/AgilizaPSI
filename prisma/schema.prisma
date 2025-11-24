@@ -95,6 +95,8 @@ model User {
   role                  UserRole      @default(USER)
   password              String
   plainPassword         String?       // Senha em texto plano (apenas para visualização no admin)
+  resetPasswordToken    String?       // Token para redefinição de senha
+  resetPasswordExpires  DateTime?     // Data de expiração do token de redefinição
   accounts              Account[]
   sessions              Session[]
   isVerfied             Boolean       @default(false)

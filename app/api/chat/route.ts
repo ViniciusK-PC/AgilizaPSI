@@ -35,6 +35,33 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Se for psicólogo, verificar se o paciente tem agendamentos com profissionais da mesma clínica
+    if (session.user.id === psychologistId) {
+      const psychologist = await prismaClient.user.findUnique({
+        where: { id: psychologistId },
+        select: { clinicId: true },
+      });
+
+      if (psychologist?.clinicId) {
+        // Verificar se o paciente tem agendamentos com profissionais da mesma clínica
+        const hasAppointmentWithClinic = await prismaClient.appointment.findFirst({
+          where: {
+            patientId: patientId,
+            psychologist: {
+              clinicId: psychologist.clinicId,
+            },
+          },
+        });
+
+        if (!hasAppointmentWithClinic) {
+          return NextResponse.json(
+            { error: "Paciente não pertence à sua clínica" },
+            { status: 403 }
+          );
+        }
+      }
+    }
+
     const messages = await prismaClient.chatMessage.findMany({
       where: {
         OR: [
@@ -125,8 +152,21 @@ export async function POST(request: NextRequest) {
 
     // Verificar se remetente e destinatário existem
     const [sender, receiver] = await Promise.all([
-      prismaClient.user.findUnique({ where: { id: senderId } }),
-      prismaClient.user.findUnique({ where: { id: receiverId } }),
+      prismaClient.user.findUnique({ 
+        where: { id: senderId },
+        select: {
+          id: true,
+          role: true,
+          clinicId: true,
+        },
+      }),
+      prismaClient.user.findUnique({ 
+        where: { id: receiverId },
+        select: {
+          id: true,
+          role: true,
+        },
+      }),
     ]);
 
     if (!sender || !receiver) {
@@ -146,6 +186,25 @@ export async function POST(request: NextRequest) {
         { error: "Chat permitido apenas entre paciente e psicólogo" },
         { status: 403 }
       );
+    }
+
+    // Se psicólogo está enviando mensagem, verificar se o paciente tem agendamentos com profissionais da mesma clínica
+    if (sender.role === "PSICOLOGO" && receiver.role === "USER" && sender.clinicId) {
+      const hasAppointmentWithClinic = await prismaClient.appointment.findFirst({
+        where: {
+          patientId: receiverId,
+          psychologist: {
+            clinicId: sender.clinicId,
+          },
+        },
+      });
+
+      if (!hasAppointmentWithClinic) {
+        return NextResponse.json(
+          { error: "Paciente não pertence à sua clínica" },
+          { status: 403 }
+        );
+      }
     }
 
     const newMessage = await prismaClient.chatMessage.create({
@@ -170,6 +229,65 @@ export async function POST(request: NextRequest) {
     console.error("Error sending chat message:", error);
     return NextResponse.json(
       { error: "Erro ao enviar mensagem" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE - Deletar todas as mensagens de uma conversa
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "Não autenticado" },
+        { status: 401 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const patientId = searchParams.get("patientId");
+    const psychologistId = searchParams.get("psychologistId");
+
+    if (!patientId || !psychologistId) {
+      return NextResponse.json(
+        { error: "patientId e psychologistId são obrigatórios" },
+        { status: 400 }
+      );
+    }
+
+    // Verificar se o usuário tem permissão (deve ser paciente ou psicólogo da conversa)
+    if (session.user.id !== patientId && session.user.id !== psychologistId) {
+      return NextResponse.json(
+        { error: "Sem permissão para deletar esta conversa" },
+        { status: 403 }
+      );
+    }
+
+    // Deletar todas as mensagens da conversa
+    const result = await prismaClient.chatMessage.deleteMany({
+      where: {
+        OR: [
+          {
+            senderId: patientId,
+            receiverId: psychologistId,
+          },
+          {
+            senderId: psychologistId,
+            receiverId: patientId,
+          },
+        ],
+      },
+    });
+
+    return NextResponse.json(
+      { data: { success: true, deletedCount: result.count } },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error deleting chat messages:", error);
+    return NextResponse.json(
+      { error: "Erro ao deletar mensagens" },
       { status: 500 }
     );
   }

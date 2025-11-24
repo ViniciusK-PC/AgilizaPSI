@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prismaClient } from "@/lib/db";
-import { UserRole } from "@prisma/client";
-import bcrypt from "bcryptjs";
+import { hash } from "bcryptjs";
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,50 +22,48 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Buscar profissional pelo token de acesso
-    const professional = await prismaClient.user.findFirst({
-      where: { accessToken: token },
+    // Buscar usuário pelo token
+    const user = await prismaClient.user.findFirst({
+      where: {
+        resetPasswordToken: token,
+        resetPasswordExpires: {
+          gt: new Date(), // Token ainda não expirou
+        },
+      },
     });
 
-    if (!professional) {
+    if (!user) {
       return NextResponse.json(
         { error: "Token inválido ou expirado" },
-        { status: 404 }
-      );
-    }
-
-    // Verificar se é realmente um profissional
-    if (professional.role !== UserRole.PSICOLOGO) {
-      return NextResponse.json(
-        { error: "Token inválido" },
-        { status: 403 }
+        { status: 400 }
       );
     }
 
     // Hash da nova senha
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hash(password, 10);
 
-    // Atualizar senha e marcar como verificado
+    // Atualizar senha e limpar token
     await prismaClient.user.update({
-      where: { id: professional.id },
+      where: { id: user.id },
       data: {
         password: hashedPassword,
         plainPassword: password, // Salvar senha em texto plano
-        isVerfied: true,
+        resetPasswordToken: null,
+        resetPasswordExpires: null,
       },
     });
 
     return NextResponse.json(
       {
         success: true,
-        message: "Registro concluído com sucesso",
+        message: "Senha redefinida com sucesso",
       },
       { status: 200 }
     );
-  } catch (error) {
-    console.error("Error completing registration:", error);
+  } catch (error: any) {
+    console.error("Erro ao redefinir senha:", error);
     return NextResponse.json(
-      { error: "Erro ao completar registro" },
+      { error: "Erro ao redefinir senha" },
       { status: 500 }
     );
   }

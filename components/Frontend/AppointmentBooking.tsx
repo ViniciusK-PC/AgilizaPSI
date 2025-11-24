@@ -214,7 +214,7 @@ export default function AppointmentBooking({
                   onClick={() => formik.setFieldValue("type", "ONLINE")}
                   className={`p-4 border-2 rounded-lg transition-all ${
                     formik.values.type === "ONLINE"
-                      ? "border-blue-600 bg-blue-50"
+                      ? "border-green-600 bg-green-50"
                       : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
@@ -227,7 +227,7 @@ export default function AppointmentBooking({
                   onClick={() => formik.setFieldValue("type", "PRESENCIAL")}
                   className={`p-4 border-2 rounded-lg transition-all ${
                     formik.values.type === "PRESENCIAL"
-                      ? "border-blue-600 bg-blue-50"
+                      ? "border-green-600 bg-green-50"
                       : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
@@ -307,7 +307,7 @@ export default function AppointmentBooking({
                       onClick={() => formik.setFieldValue("startTime", slot.startTime)}
                       className={`p-2 text-sm border rounded transition-all ${
                         formik.values.startTime === slot.startTime
-                          ? "border-blue-600 bg-blue-50 text-blue-700"
+                          ? "border-green-600 bg-green-50 text-green-700"
                           : "border-gray-200 hover:border-gray-300"
                       }`}
                     >
@@ -433,9 +433,9 @@ export default function AppointmentBooking({
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   {formik.values.type === "ONLINE" ? (
-                    <Video className="w-5 h-5 text-blue-600" />
+                    <Video className="w-5 h-5 text-green-600" />
                   ) : (
-                    <MapPin className="w-5 h-5 text-blue-600" />
+                    <MapPin className="w-5 h-5 text-green-600" />
                   )}
                   <div>
                     <p className="text-sm text-gray-500">Tipo</p>
@@ -447,7 +447,7 @@ export default function AppointmentBooking({
 
                 {formik.values.date && (
                   <div className="flex items-center gap-3">
-                    <Calendar className="w-5 h-5 text-blue-600" />
+                    <Calendar className="w-5 h-5 text-green-600" />
                     <div>
                       <p className="text-sm text-gray-500">Data</p>
                       <p className="font-medium">
@@ -464,7 +464,7 @@ export default function AppointmentBooking({
 
                 {formik.values.startTime && (
                   <div className="flex items-center gap-3">
-                    <Clock className="w-5 h-5 text-blue-600" />
+                    <Clock className="w-5 h-5 text-green-600" />
                     <div>
                       <p className="text-sm text-gray-500">Horário</p>
                       <p className="font-medium">{formatTime(formik.values.startTime)}</p>
@@ -474,10 +474,10 @@ export default function AppointmentBooking({
 
                 {selectedPsychologist.phone && (
                   <div className="flex items-center gap-3">
-                    <Phone className="w-5 h-5 text-blue-600" />
+                    <Phone className="w-5 h-5 text-green-600" />
                     <div>
                       <p className="text-sm text-gray-500">Contato</p>
-                      <a href={`tel:${selectedPsychologist.phone}`} className="font-medium hover:text-blue-600">
+                      <a href={`tel:${selectedPsychologist.phone}`} className="font-medium hover:text-green-600">
                         {selectedPsychologist.phone}
                       </a>
                     </div>
@@ -486,10 +486,10 @@ export default function AppointmentBooking({
 
                 {selectedPsychologist.email && (
                   <div className="flex items-center gap-3">
-                    <Mail className="w-5 h-5 text-blue-600" />
+                    <Mail className="w-5 h-5 text-green-600" />
                     <div>
                       <p className="text-sm text-gray-500">Email</p>
-                      <a href={`mailto:${selectedPsychologist.email}`} className="font-medium hover:text-blue-600">
+                      <a href={`mailto:${selectedPsychologist.email}`} className="font-medium hover:text-green-600">
                         {selectedPsychologist.email}
                       </a>
                     </div>

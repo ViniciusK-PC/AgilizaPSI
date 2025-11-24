@@ -44,13 +44,16 @@ export default function AppointmentReminders({ onAppointmentSelect }: Props) {
     enabled: !!session?.user?.id,
   });
 
-  // Filtrar apenas agendamentos futuros e confirmados
+  // Filtrar apenas agendamentos futuros (PENDING ou CONFIRMED) do paciente logado
+  // A API já garante que apenas consultas do paciente logado são retornadas
   const upcomingAppointments = appointments
     .filter((apt: Appointment) => {
       const appointmentDate = new Date(apt.date);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      return appointmentDate >= today && apt.status === "CONFIRMED";
+      
+      // Incluir apenas agendamentos futuros com status PENDING ou CONFIRMED
+      return appointmentDate >= today && (apt.status === "CONFIRMED" || apt.status === "PENDING");
     })
     .sort((a: Appointment, b: Appointment) => 
       new Date(a.date).getTime() - new Date(b.date).getTime()
@@ -90,7 +93,7 @@ export default function AppointmentReminders({ onAppointmentSelect }: Props) {
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center justify-center">
-            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
         </CardContent>
       </Card>
@@ -138,15 +141,29 @@ export default function AppointmentReminders({ onAppointmentSelect }: Props) {
                         </div>
                       </div>
                     </div>
-                    {onAppointmentSelect && appointment.type === "ONLINE" && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onAppointmentSelect(appointment.id, appointment.psychologist.id)}
-                      >
-                        Acessar Sala
-                      </Button>
+                    {appointment.type === "ONLINE" && (
+                      <div className="flex flex-col gap-2 items-end">
+                        {onAppointmentSelect && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onAppointmentSelect(appointment.id, appointment.psychologist.id)}
+                          >
+                            Acessar Sala
+                          </Button>
+                        )}
+                        {appointment.meetingLink && (
+                          <a
+                            href={appointment.meetingLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-green-600 dark:text-green-400 hover:underline"
+                          >
+                            Link da Sala
+                          </a>
+                        )}
+                      </div>
                     )}
                   </div>
                 </CardContent>
@@ -204,15 +221,29 @@ export default function AppointmentReminders({ onAppointmentSelect }: Props) {
                           </div>
                         </div>
                       </div>
-                      {onAppointmentSelect && appointment.type === "ONLINE" && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onAppointmentSelect(appointment.id, appointment.psychologist.id)}
-                        >
-                          Acessar Sala
-                        </Button>
+                      {appointment.type === "ONLINE" && (
+                        <div className="flex flex-col gap-2 items-end">
+                          {onAppointmentSelect && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => onAppointmentSelect(appointment.id, appointment.psychologist.id)}
+                            >
+                              Acessar Sala
+                            </Button>
+                          )}
+                          {appointment.meetingLink && (
+                            <a
+                              href={appointment.meetingLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-green-600 dark:text-green-400 hover:underline"
+                            >
+                              Link da Sala
+                            </a>
+                          )}
+                        </div>
                       )}
                     </div>
                   </CardContent>

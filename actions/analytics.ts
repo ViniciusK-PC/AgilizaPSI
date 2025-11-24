@@ -3,10 +3,17 @@
 import { prismaClient } from "@/lib/db";
 
 // Dashboard Analytics
-export async function getDashboardAnalytics(psychologistId?: string) {
+export async function getDashboardAnalytics(psychologistId?: string, clinicId?: string) {
   try {
     const where: any = {};
-    if (psychologistId) {
+    
+    // Priorizar filtro por clínica: se clinicId for fornecido, mostrar todos os dados da clínica
+    if (clinicId) {
+      where.psychologist = {
+        clinicId: clinicId,
+      };
+    } else if (psychologistId) {
+      // Se não houver clinicId, filtrar por psychologistId
       where.psychologistId = psychologistId;
     }
 
@@ -64,8 +71,16 @@ export async function getDashboardAnalytics(psychologistId?: string) {
 
     // Receita total (pagamentos confirmados)
     const paymentWhere: any = {};
-    if (psychologistId) {
-      paymentWhere.appointment = { psychologistId };
+    if (psychologistId || clinicId) {
+      paymentWhere.appointment = {};
+      if (psychologistId) {
+        paymentWhere.appointment.psychologistId = psychologistId;
+      }
+      if (clinicId) {
+        paymentWhere.appointment.psychologist = {
+          clinicId: clinicId,
+        };
+      }
     }
 
     const revenue = await prismaClient.payment.aggregate({

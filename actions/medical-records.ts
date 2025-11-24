@@ -272,7 +272,7 @@ export async function updateMedicalRecord(id: string, data: UpdateMedicalRecordP
 }
 
 // READ - Listar todos os prontuários (para psicólogo)
-export async function getAllMedicalRecords(psychologistId?: string) {
+export async function getAllMedicalRecords(psychologistId?: string, clinicId?: string) {
   try {
     const where: any = {};
     if (psychologistId) {
@@ -285,6 +285,13 @@ export async function getAllMedicalRecords(psychologistId?: string) {
         };
       }
       where.psychologistId = psychologistId;
+    }
+
+    // Filtrar por clínica: se clinicId for fornecido, apenas prontuários de pacientes que têm agendamentos com profissionais da mesma clínica
+    if (clinicId) {
+      where.psychologist = {
+        clinicId: clinicId,
+      };
     }
 
     const records = await prismaClient.medicalRecord.findMany({

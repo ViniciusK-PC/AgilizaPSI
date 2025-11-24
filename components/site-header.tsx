@@ -29,10 +29,10 @@ export function SiteHeader() {
     <header className="sticky top-0 z-50 border-b border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-950/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-gray-950/60 shadow-sm">
       <div className="flex h-16 items-center justify-between px-4 max-w-screen-2xl mx-auto">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 font-bold text-xl text-blue-950 dark:text-blue-400">
+        <Link href="/" className="flex items-center gap-2 font-bold text-xl text-green-950 dark:text-green-400">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 dark:bg-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold">A</span>
+            <div className="w-8 h-8 bg-green-600 dark:bg-green-500 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-xl">Ψ</span>
             </div>
             <span className="hidden sm:inline">AgilizaPSI</span>
           </div>
@@ -44,7 +44,7 @@ export function SiteHeader() {
             <Link
               key={item.label}
               href={item.href}
-              className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-md hover:bg-blue-50 dark:hover:bg-blue-950/50"
+              className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors rounded-md hover:bg-green-50 dark:hover:bg-green-950/50"
             >
               {item.label}
             </Link>
@@ -137,7 +137,7 @@ export function SiteHeader() {
             <Link
               key={item.label}
               href={item.href}
-              className="block px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-md hover:bg-blue-50 dark:hover:bg-blue-950/50"
+              className="block px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors rounded-md hover:bg-green-50 dark:hover:bg-green-950/50"
               onClick={() => setMobileMenuOpen(false)}
             >
               {item.label}

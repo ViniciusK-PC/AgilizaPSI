@@ -95,7 +95,7 @@ export default function DoctorCard({ doctor, isInPerson = false }: {
               className="w-24 h-24 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
             />
             {!isInPerson && (
-              <p className="absolute bottom-0 right-0 bg-blue-200 dark:bg-blue-800 w-10 h-10 flex items-center justify-center rounded-full text-blue-700 dark:text-blue-300 border-2 border-white dark:border-gray-900">
+              <p className="absolute bottom-0 right-0 bg-green-200 dark:bg-green-800 w-10 h-10 flex items-center justify-center rounded-full text-green-700 dark:text-green-300 border-2 border-white dark:border-gray-900">
                 <Video className="w-5 h-5" />
               </p>
             )}
@@ -104,7 +104,7 @@ export default function DoctorCard({ doctor, isInPerson = false }: {
           <div className="flex-1 flex flex-col gap-2">
             {/* Especialidade */}
             <p className="flex items-center text-sm">
-              <Stethoscope className="w-4 h-4 mr-2 shrink-0 text-blue-600 dark:text-blue-400" />
+              <Stethoscope className="w-4 h-4 mr-2 shrink-0 text-green-600 dark:text-green-400" />
               <span className="font-medium dark:text-gray-300">{primarySpecialty}</span>
             </p>
 
@@ -120,7 +120,7 @@ export default function DoctorCard({ doctor, isInPerson = false }: {
             {doctor.phone && (
               <p className="flex items-center text-sm text-gray-700 dark:text-gray-300">
                 <Phone className="w-4 h-4 mr-2 shrink-0" />
-                <a href={`tel:${doctor.phone}`} className="hover:text-blue-600 dark:hover:text-blue-400">
+                <a href={`tel:${doctor.phone}`} className="hover:text-green-600 dark:hover:text-green-400">
                   {formatPhone(doctor.phone)}
                 </a>
               </p>
@@ -156,14 +156,14 @@ export default function DoctorCard({ doctor, isInPerson = false }: {
             {nextSlots.map((slot: string, i: number) => (
               <Link
                 key={i}
-                className="bg-blue-600 hover:bg-blue-700 text-sm text-white p-2 text-center rounded transition-colors"
+                className="bg-green-600 hover:bg-green-700 text-sm text-white p-2 text-center rounded transition-colors"
                 href={`/appointment?psychologistId=${doctor.id}&date=${today}&time=${slot}&type=${isInPerson ? 'PRESENCIAL' : 'ONLINE'}`}
               >
                 {formatTime(slot)}
               </Link>
             ))}
             <Link
-              className="text-xs text-center bg-blue-900 hover:bg-blue-950 text-white py-2 px-3 rounded truncate transition-colors"
+              className="text-xs text-center bg-green-900 hover:bg-green-950 text-white py-2 px-3 rounded truncate transition-colors"
               href={`/doctor/${doctor.id}`}
             >
               Ver Perfil
@@ -176,7 +176,7 @@ export default function DoctorCard({ doctor, isInPerson = false }: {
       {nextSlots.length === 0 && (
         <div className="pt-6 border-t border-gray-300 dark:border-gray-700 mt-4">
           <Link
-            className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white py-2 px-4 rounded text-center block transition-colors"
+            className="w-full bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white py-2 px-4 rounded text-center block transition-colors"
             href={`/doctor/${doctor.id}`}
           >
             Ver Perfil Completo

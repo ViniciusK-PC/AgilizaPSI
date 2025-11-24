@@ -40,7 +40,7 @@ export default function AboutSection() {
                   />
                   <div className="absolute -bottom-6 -right-6 bg-white dark:bg-gray-800 rounded-xl p-6 shadow-xl">
                     <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 bg-blue-600 dark:bg-blue-500 rounded-full flex items-center justify-center">
+                      <div className="w-16 h-16 bg-green-600 dark:bg-green-500 rounded-full flex items-center justify-center">
                         <Award className="w-8 h-8 text-white" />
                       </div>
                       <div>
@@ -55,7 +55,7 @@ export default function AboutSection() {
                 ) : (
                   <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 shadow-xl text-center">
                     <div className="w-32 h-32 bg-blue-100 dark:bg-blue-900 rounded-full mx-auto mb-6 flex items-center justify-center">
-                      <Heart className="w-16 h-16 text-blue-600 dark:text-blue-400" />
+                      <Heart className="w-16 h-16 text-green-600 dark:text-green-400" />
                     </div>
                     <h3 className="text-2xl font-bold mb-4 dark:text-white">Profissional Qualificada</h3>
                     <p className="text-gray-600 dark:text-gray-400">
@@ -99,7 +99,7 @@ export default function AboutSection() {
             <div className="space-y-4">
               {mainPsychologist?.crp && (
                 <div className="flex items-center gap-3">
-                  <GraduationCap className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  <GraduationCap className="w-6 h-6 text-green-600 dark:text-green-400" />
                   <div>
                     <p className="font-semibold dark:text-white">CRP: {mainPsychologist.crp}</p>
                     <p className="text-sm text-gray-600 dark:text-gray-400">Registro Profissional</p>
@@ -109,7 +109,7 @@ export default function AboutSection() {
               
               {mainPsychologist?.specialization && (
                 <div className="flex items-center gap-3">
-                  <Award className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  <Award className="w-6 h-6 text-green-600 dark:text-green-400" />
                   <div>
                     <p className="font-semibold dark:text-white">{mainPsychologist.specialization}</p>
                     <p className="text-sm text-gray-600 dark:text-gray-400">Especialização</p>
@@ -119,7 +119,7 @@ export default function AboutSection() {
 
               {mainPsychologist?.experience && (
                 <div className="flex items-center gap-3">
-                  <CheckCircle className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
                   <div>
                     <p className="font-semibold dark:text-white">{mainPsychologist.experience} anos de experiência</p>
                     <p className="text-sm text-gray-600 dark:text-gray-400">Atendimento profissional</p>
@@ -132,7 +132,7 @@ export default function AboutSection() {
             <div className="pt-4">
               <a
                 href="/appointment"
-                className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-8 py-4 text-lg font-semibold text-white hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center justify-center rounded-lg bg-green-600 px-8 py-4 text-lg font-semibold text-white hover:bg-green-700 transition-colors"
               >
                 Agendar Consulta
               </a>

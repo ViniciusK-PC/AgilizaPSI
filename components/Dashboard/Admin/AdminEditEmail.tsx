@@ -157,7 +157,7 @@ export default function AdminEditEmail() {
               />
               {formik.touched.email && formik.errors.email && (
                 <p className="text-sm text-red-500 dark:text-red-400">
-                  {formik.errors.email}
+                  {String(formik.errors.email)}
                 </p>
               )}
             </div>
@@ -174,7 +174,7 @@ export default function AdminEditEmail() {
               />
               {formik.touched.confirmEmail && formik.errors.confirmEmail && (
                 <p className="text-sm text-red-500 dark:text-red-400">
-                  {formik.errors.confirmEmail}
+                  {String(formik.errors.confirmEmail)}
                 </p>
               )}
             </div>

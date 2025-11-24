@@ -65,7 +65,7 @@ export async function getPayments(filters?: {
   appointmentId?: string;
   dateFrom?: Date;
   dateTo?: Date;
-}) {
+}, clinicId?: string) {
   try {
     const where: any = {};
 
@@ -77,7 +77,16 @@ export async function getPayments(filters?: {
       where.appointmentId = filters.appointmentId;
     }
 
-    if (filters?.psychologistId) {
+    // Construir filtro de appointment
+    // Priorizar filtro por clínica: se clinicId for fornecido, mostrar todos os pagamentos da clínica
+    if (clinicId) {
+      where.appointment = {
+        psychologist: {
+          clinicId: clinicId,
+        },
+      };
+    } else if (filters?.psychologistId) {
+      // Se não houver clinicId, filtrar por psychologistId
       where.appointment = {
         psychologistId: filters.psychologistId,
       };
@@ -184,11 +193,22 @@ export async function updatePayment(
 }
 
 // Estatísticas financeiras
-export async function getFinancialStats(psychologistId?: string) {
+export async function getFinancialStats(psychologistId?: string, clinicId?: string) {
   try {
     const where: any = {};
-    if (psychologistId) {
-      where.appointment = { psychologistId };
+    
+    // Priorizar filtro por clínica: se clinicId for fornecido, mostrar todos os dados da clínica
+    if (clinicId) {
+      where.appointment = {
+        psychologist: {
+          clinicId: clinicId,
+        },
+      };
+    } else if (psychologistId) {
+      // Se não houver clinicId, filtrar por psychologistId
+      where.appointment = {
+        psychologistId: psychologistId,
+      };
     }
 
     const [totalPaid, totalPending, totalCancelled] = await Promise.all([

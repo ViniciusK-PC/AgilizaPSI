@@ -262,7 +262,7 @@ export default function VirtualRoom({ appointmentId, patientName, psychologistNa
         <CardContent className="p-6">
           <div className="flex items-center justify-center">
             <div className="text-center">
-              <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+              <div className="w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
               <p className="text-sm text-muted-foreground">Carregando sala virtual...</p>
             </div>
           </div>

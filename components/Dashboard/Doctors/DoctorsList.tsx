@@ -54,7 +54,9 @@ export default function DoctorsList() {
   const { data: psychologists = [], isLoading } = useQuery<Psychologist[]>({
     queryKey: ["psychologists-all"],
     queryFn: async () => {
-      const response = await fetch("/api/psychologists");
+      const response = await fetch("/api/psychologists", {
+        cache: "no-store", // Não usar cache para garantir dados atualizados
+      });
       if (!response.ok) throw new Error("Erro ao buscar psicólogos");
       const data = await response.json();
       return data.data;

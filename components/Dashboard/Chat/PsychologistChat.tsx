@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Send, Loader2, MessageSquare, Edit2, X, Check, Smile } from "lucide-react";
+import { Send, Loader2, MessageSquare, Edit2, X, Check, Smile, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -227,6 +227,63 @@ export default function PsychologistChat() {
     updateMessage.mutate({ messageId: editingMessageId, newText: editingText.trim() });
   };
 
+  // Deletar mensagem
+  const deleteMessage = useMutation({
+    mutationFn: async (messageId: string) => {
+      const response = await fetch(`/api/chat/${messageId}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Erro ao deletar mensagem");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["chat-messages"] });
+      queryClient.invalidateQueries({ queryKey: ["unread-messages-count"] });
+      toast.success("Mensagem deletada com sucesso!");
+    },
+    onError: () => {
+      toast.error("Erro ao deletar mensagem");
+    },
+  });
+
+  const handleDeleteMessage = (messageId: string) => {
+    if (confirm("Tem certeza que deseja deletar esta mensagem?")) {
+      deleteMessage.mutate(messageId);
+    }
+  };
+
+  // Deletar todas as mensagens da conversa
+  const deleteAllMessages = useMutation({
+    mutationFn: async () => {
+      if (!selectedPatientId || !session?.user?.id) {
+        throw new Error("Paciente não selecionado");
+      }
+      // Deletar todas as mensagens da conversa
+      const response = await fetch(
+        `/api/chat?patientId=${selectedPatientId}&psychologistId=${session.user.id}`,
+        {
+          method: "DELETE",
+        }
+      );
+      if (!response.ok) throw new Error("Erro ao deletar mensagens");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["chat-messages"] });
+      queryClient.invalidateQueries({ queryKey: ["unread-messages-count"] });
+      toast.success("Todas as mensagens foram deletadas!");
+    },
+    onError: () => {
+      toast.error("Erro ao deletar mensagens");
+    },
+  });
+
+  const handleDeleteAllMessages = () => {
+    if (confirm("Tem certeza que deseja deletar TODAS as mensagens desta conversa? Esta ação não pode ser desfeita.")) {
+      deleteAllMessages.mutate();
+    }
+  };
+
   // Adicionar emoji à mensagem
   const handleEmojiSelect = (emoji: string) => {
     setMessage((prev) => prev + emoji);
@@ -316,21 +373,42 @@ export default function PsychologistChat() {
       {/* Área de Chat */}
       <Card className="lg:col-span-3 flex flex-col">
         <CardHeader>
-          <CardTitle className="flex items-center gap-3">
-            {selectedPatient && (
-              <>
-                <Avatar className="h-8 w-8">
-                  {selectedPatient.image && (
-                    <AvatarImage src={selectedPatient.image} alt={selectedPatient.name} />
-                  )}
-                  <AvatarFallback>
-                    {selectedPatient.name?.charAt(0) || "P"}
-                  </AvatarFallback>
-                </Avatar>
-                <span>{selectedPatient.name}</span>
-              </>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-3">
+              {selectedPatient && (
+                <>
+                  <Avatar className="h-8 w-8">
+                    {selectedPatient.image && (
+                      <AvatarImage src={selectedPatient.image} alt={selectedPatient.name} />
+                    )}
+                    <AvatarFallback>
+                      {selectedPatient.name?.charAt(0) || "P"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span>{selectedPatient.name}</span>
+                </>
+              )}
+            </CardTitle>
+            {selectedPatientId && messages.length > 0 && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleDeleteAllMessages}
+                disabled={deleteAllMessages.isPending}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20"
+              >
+                {deleteAllMessages.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Apagar Chat
+                  </>
+                )}
+              </Button>
             )}
-          </CardTitle>
+          </div>
         </CardHeader>
         <CardContent className="flex-1 flex flex-col p-0">
           {/* Mensagens */}
@@ -371,7 +449,7 @@ export default function PsychologistChat() {
                           {msg.sender.name?.charAt(0) || "U"}
                         </AvatarFallback>
                       </Avatar>
-                      <div className={`flex flex-col ${isOwn ? "items-end" : "items-start"} group relative`}>
+                      <div className={`flex flex-col ${isOwn ? "items-end" : "items-start"} group relative hover:bg-opacity-5`}>
                         {isEditing ? (
                           <div className="flex flex-col gap-2 w-full">
                             <div className="flex gap-2">
@@ -392,14 +470,19 @@ export default function PsychologistChat() {
                               />
                               <Popover open={editingEmojiPickerOpen} onOpenChange={setEditingEmojiPickerOpen}>
                                 <PopoverTrigger asChild>
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-10 w-10"
+                                  <div
+                                    role="button"
+                                    tabIndex={0}
+                                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 h-10 w-10 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 cursor-pointer"
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter" || e.key === " ") {
+                                        e.preventDefault();
+                                        setEditingEmojiPickerOpen(!editingEmojiPickerOpen);
+                                      }
+                                    }}
                                   >
                                     <Smile className="w-4 h-4" />
-                                  </Button>
+                                  </div>
                                 </PopoverTrigger>
                                 <PopoverContent 
                                   className="w-auto p-2 max-h-96 overflow-y-auto" 
@@ -452,16 +535,33 @@ export default function PsychologistChat() {
                                 {format(new Date(msg.createdAt), "HH:mm", { locale: ptBR })}
                               </span>
                               {isOwn && (
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={() => handleStartEdit(msg)}
-                                  title="Editar mensagem"
-                                >
-                                  <Edit2 className="w-3 h-3" />
-                                </Button>
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0 opacity-70 hover:opacity-100 transition-opacity"
+                                    onClick={() => handleStartEdit(msg)}
+                                    title="Editar mensagem"
+                                  >
+                                    <Edit2 className="w-3 h-3" />
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0 opacity-70 hover:opacity-100 transition-opacity text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20"
+                                    onClick={() => handleDeleteMessage(msg.id)}
+                                    title="Deletar mensagem"
+                                    disabled={deleteMessage.isPending}
+                                  >
+                                    {deleteMessage.isPending ? (
+                                      <Loader2 className="w-3 h-3 animate-spin" />
+                                    ) : (
+                                      <Trash2 className="w-3 h-3" />
+                                    )}
+                                  </Button>
+                                </div>
                               )}
                             </div>
                           </>
@@ -487,14 +587,21 @@ export default function PsychologistChat() {
               />
               <Popover open={emojiPickerOpen} onOpenChange={setEmojiPickerOpen}>
                 <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    disabled={!selectedPatientId || sendMessage.isPending}
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    className={`inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all h-9 w-9 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 cursor-pointer ${
+                      !selectedPatientId || sendMessage.isPending ? "opacity-50 pointer-events-none" : ""
+                    }`}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setEmojiPickerOpen(!emojiPickerOpen);
+                      }
+                    }}
                   >
                     <Smile className="w-4 h-4" />
-                  </Button>
+                  </div>
                 </PopoverTrigger>
                 <PopoverContent 
                   className="w-auto p-2 max-h-96 overflow-y-auto" 

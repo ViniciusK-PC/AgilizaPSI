@@ -179,7 +179,7 @@ export async function createAppointment(data: CreateAppointmentProps) {
 }
 
 // READ - Listar todos os agendamentos com filtros
-export async function getAppointments(filters?: AppointmentFilterProps) {
+export async function getAppointments(filters?: AppointmentFilterProps, clinicId?: string) {
   try {
     const where: any = {};
 
@@ -209,6 +209,13 @@ export async function getAppointments(filters?: AppointmentFilterProps) {
       }
     }
 
+    // Filtrar por clínica: se clinicId for fornecido, apenas agendamentos com psicólogos da mesma clínica
+    if (clinicId) {
+      where.psychologist = {
+        clinicId: clinicId,
+      };
+    }
+
     const appointments = await prismaClient.appointment.findMany({
       where,
       include: {
@@ -219,6 +226,7 @@ export async function getAppointments(filters?: AppointmentFilterProps) {
             email: true,
             phone: true,
             image: true,
+            clinicId: true,
           },
         },
         patient: {

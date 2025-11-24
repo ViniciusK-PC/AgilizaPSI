@@ -9,7 +9,7 @@ import { User } from "@prisma/client";
 export default function DoctorList({
     title = "Telessaúde Visite",
     isInPerson,
-    className = "bg-pink-100 dark:bg-gray-900 py-8 lg:py-24",
+    className = "bg-green-50 dark:bg-gray-900 py-8 lg:py-24",
 }: {
     title?: string;
     isInPerson?: boolean;

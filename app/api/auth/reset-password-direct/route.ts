@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prismaClient } from "@/lib/db";
+import { hash } from "bcryptjs";
 import { UserRole } from "@prisma/client";
-import bcrypt from "bcryptjs";
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    const { token, password } = await request.json();
+    const { email, password } = await request.json();
 
-    if (!token || !password) {
+    if (!email || !password) {
       return NextResponse.json(
-        { error: "Token e senha são obrigatórios" },
+        { error: "Email e senha são obrigatórios" },
         { status: 400 }
       );
     }
@@ -21,50 +23,52 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Buscar profissional pelo token de acesso
-    const professional = await prismaClient.user.findFirst({
-      where: { accessToken: token },
+    // Normalizar email
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Buscar usuário
+    const user = await prismaClient.user.findUnique({
+      where: { email: normalizedEmail },
     });
 
-    if (!professional) {
+    if (!user) {
       return NextResponse.json(
-        { error: "Token inválido ou expirado" },
+        { error: "Usuário não encontrado" },
         { status: 404 }
       );
     }
 
-    // Verificar se é realmente um profissional
-    if (professional.role !== UserRole.PSICOLOGO) {
+    // Verificar se é paciente
+    if (user.role !== UserRole.USER) {
       return NextResponse.json(
-        { error: "Token inválido" },
+        { error: "Esta funcionalidade é apenas para pacientes" },
         { status: 403 }
       );
     }
 
     // Hash da nova senha
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hash(password, 10);
 
-    // Atualizar senha e marcar como verificado
+    // Atualizar senha
     await prismaClient.user.update({
-      where: { id: professional.id },
+      where: { id: user.id },
       data: {
         password: hashedPassword,
         plainPassword: password, // Salvar senha em texto plano
-        isVerfied: true,
       },
     });
 
     return NextResponse.json(
       {
         success: true,
-        message: "Registro concluído com sucesso",
+        message: "Senha redefinida com sucesso",
       },
       { status: 200 }
     );
-  } catch (error) {
-    console.error("Error completing registration:", error);
+  } catch (error: any) {
+    console.error("Erro ao redefinir senha:", error);
     return NextResponse.json(
-      { error: "Erro ao completar registro" },
+      { error: "Erro ao redefinir senha" },
       { status: 500 }
     );
   }
