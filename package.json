@@ -12,7 +12,8 @@
     "test:coverage": "jest --coverage",
     "postinstall": "prisma generate",
     "vercel-build": "prisma generate && prisma db push && next build",
-    "create-admins": "node scripts/create-admins.js"
+    "create-admins": "node scripts/create-admins.js",
+    "generate-diagram": "node scripts/generate-use-case-diagram.js"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",

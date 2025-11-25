@@ -1,0 +1,285 @@
+@startuml DiagramaClasses_AgilizaPSI
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+package "Autenticação" {
+    class Account {
+        +String id
+        +String userId
+        +String type
+        +String provider
+        +String providerAccountId
+        +String? refresh_token
+        +String? access_token
+        +Int? expires_at
+        +String? token_type
+        +String? scope
+        +String? id_token
+        +String? session_state
+    }
+
+    class Session {
+        +String id
+        +String sessionToken
+        +String userId
+        +DateTime expires
+    }
+}
+
+package "Usuários e Clínicas" {
+    class User {
+        +String id
+        +String name
+        +String email
+        +String phone
+        +UserRole role
+        +String password
+        +String? crp
+        +String? specialization
+        +String? bio
+        +Int? experience
+        +String[] languages
+        +String[] specialties
+        +String? accessToken
+        +String? clinicId
+        +DateTime createdAt
+        +DateTime updatedAt
+    }
+
+    class Clinic {
+        +String id
+        +String name
+        +String? email
+        +String? phone
+        +String? address
+        +String? cnpj
+        +String? description
+        +String? accessToken
+        +String[] workingDays
+        +String workingHoursStart
+        +String workingHoursEnd
+        +Int minAdvanceBookingDays
+        +Int maxAdvanceBookingDays
+        +Boolean isActive
+        +DateTime createdAt
+        +DateTime updatedAt
+    }
+
+    class ClinicSettings {
+        +String id
+        +String clinicName
+        +String? clinicEmail
+        +String? clinicPhone
+        +String? clinicAddress
+        +String? clinicCNPJ
+        +String[] workingDays
+        +String workingHoursStart
+        +String workingHoursEnd
+        +Int appointmentDuration
+        +Boolean enableEmailReminders
+        +Boolean enableSMSReminders
+        +String? platformPixKey
+        +DateTime createdAt
+        +DateTime updatedAt
+    }
+
+    class PsychologistSettings {
+        +String id
+        +String psychologistId
+        +String workingHoursStart
+        +String workingHoursEnd
+        +Int defaultSessionDuration
+        +Float defaultPrice
+        +Boolean acceptOnlineAppointments
+        +Boolean acceptInPersonAppointments
+        +Boolean autoConfirmAppointments
+        +Boolean enableCheckout
+        +String? pixKey
+        +String? bio
+        +String[] specialties
+        +String[] languages
+        +DateTime createdAt
+        +DateTime updatedAt
+    }
+
+    class Availability {
+        +String id
+        +String psychologistId
+        +DateTime date
+        +String[] availableSlots
+        +Boolean isAvailable
+        +DateTime createdAt
+        +DateTime updatedAt
+    }
+}
+
+package "Agendamentos" {
+    class Appointment {
+        +String id
+        +String psychologistId
+        +String? patientId
+        +DateTime date
+        +String startTime
+        +String endTime
+        +Int duration
+        +AppointmentStatus status
+        +AppointmentType type
+        +String? notes
+        +Float? price
+        +String? meetingLink
+        +Boolean reminderSent
+        +DateTime createdAt
+        +DateTime updatedAt
+    }
+
+    class Reminder {
+        +String id
+        +String appointmentId
+        +String userId
+        +ReminderType type
+        +DateTime scheduledFor
+        +Boolean sent
+        +DateTime? sentAt
+        +String message
+        +DateTime createdAt
+        +DateTime updatedAt
+    }
+}
+
+package "Prontuários" {
+    class MedicalRecord {
+        +String id
+        +String appointmentId
+        +String patientId
+        +String psychologistId
+        +String chiefComplaint
+        +String? diagnosis
+        +String? treatment
+        +String? observations
+        +String? evolution
+        +String? prescription
+        +PsychiatricFollowUp? psychiatricFollowUp
+        +DateTime createdAt
+        +DateTime updatedAt
+    }
+}
+
+package "Pagamentos" {
+    class Payment {
+        +String id
+        +String appointmentId
+        +Float amount
+        +PaymentStatus status
+        +PaymentMethod? method
+        +String? transactionId
+        +DateTime? paidAt
+        +DateTime createdAt
+        +DateTime updatedAt
+    }
+
+    class BankAccount {
+        +String id
+        +String userId
+        +String? paymentMethod
+        +String? bankName
+        +String? agency
+        +String? account
+        +String? accountType
+        +String? pixKey
+        +String? pixKeyType
+        +String? accountHolderName
+        +String? cpf
+        +DateTime createdAt
+        +DateTime updatedAt
+    }
+
+    class Withdrawal {
+        +String id
+        +String psychologistId
+        +Float amount
+        +WithdrawalStatus status
+        +String? method
+        +String? bankAccountId
+        +String? notes
+        +DateTime? processedAt
+        +DateTime createdAt
+        +DateTime updatedAt
+    }
+}
+
+package "Comunicação" {
+    class ChatMessage {
+        +String id
+        +String senderId
+        +String receiverId
+        +String message
+        +Boolean read
+        +DateTime? readAt
+        +DateTime createdAt
+        +DateTime updatedAt
+    }
+}
+
+' Relacionamentos - Autenticação
+User "1" --> "*" Account : possui
+User "1" --> "*" Session : possui
+
+' Relacionamentos - Clínicas
+User "N" --> "0..1" Clinic : pertence a
+Clinic "1" --> "*" User : profissionais
+Clinic "1" --> "0..1" ClinicSettings : possui
+
+' Relacionamentos - Configurações
+User "1" --> "0..1" PsychologistSettings : possui
+User "1" --> "*" Availability : possui
+
+' Relacionamentos - Agendamentos
+User "1" --> "*" Appointment : agenda como psicólogo
+User "1" --> "*" Appointment : agenda como paciente
+Appointment "1" --> "*" Reminder : gera
+User "1" --> "*" Reminder : recebe
+
+' Relacionamentos - Prontuários
+Appointment "1" --> "0..1" MedicalRecord : gera
+User "1" --> "*" MedicalRecord : como paciente
+User "1" --> "*" MedicalRecord : como psicólogo
+
+' Relacionamentos - Pagamentos
+Appointment "1" --> "0..1" Payment : possui
+User "1" --> "0..1" BankAccount : possui
+User "1" --> "*" Withdrawal : solicita
+BankAccount "1" --> "*" Withdrawal : usado em
+
+' Relacionamentos - Comunicação
+User "1" --> "*" ChatMessage : envia
+User "1" --> "*" ChatMessage : recebe
+
+note right of Clinic
+  Sistema multi-tenant:
+  Cada clínica opera de forma
+  isolada com seus próprios
+  profissionais e dados
+end note
+
+note right of User
+  Roles:
+  - ADMIN: Acesso total
+  - PSICOLOGO: Dashboard profissional
+  - USER: Paciente
+end note
+
+note right of Appointment
+  Tipos:
+  - ONLINE: Consulta virtual
+  - PRESENCIAL: Consulta física
+  
+  Status:
+  - PENDING
+  - CONFIRMED
+  - CANCELLED
+  - COMPLETED
+end note
+
+@enduml
+
