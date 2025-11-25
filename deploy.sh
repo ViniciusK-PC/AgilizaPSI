@@ -31,10 +31,10 @@ DATABASE_URL="mongodb://localhost:27017/agilizapsi"
 
 # NextAuth Secret (gere uma string aleatória com: openssl rand -base64 32)
 NEXTAUTH_SECRET="$(openssl rand -base64 32)"
-NEXTAUTH_URL="http://localhost:3000"
+# NEXTAUTH_URL="http://191.5.216.22:3000"
 
 # Configurações de Email (Resend)
-RESEND_API_KEY=""
+RESEND_API_KEY="re_Tx5zPej9_4FCymcMY96n8DMUfqtLi6VeB"
 EMAIL_FROM="noreply@exemplo.com"
 
 # Ambiente
@@ -157,7 +157,7 @@ echo "  - Ver logs: pm2 logs agilizapsi"
 echo "  - Monitorar: pm2 monit"
 echo "  - Reiniciar: pm2 restart agilizapsi"
 echo ""
-echo "🌐 A aplicação deve estar rodando em: http://localhost:3000"
+echo "🌐 A aplicação deve estar rodando em: http://191.5.216.22"
 echo ""
 echo "💡 Próximos passos:"
 echo "  1. Configure o Nginx como reverse proxy (veja DEPLOY_LINUX.md)"
