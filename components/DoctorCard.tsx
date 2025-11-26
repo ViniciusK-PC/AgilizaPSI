@@ -73,116 +73,114 @@ export default function DoctorCard({ doctor, isInPerson = false }: {
   // Próximos 5 horários disponíveis
   const nextSlots = availableSlots.slice(0, 5);
 
+  // Função para truncar texto
+  const truncateText = (text: string, maxLength: number) => {
+    if (!text) return "";
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength).trim() + "...";
+  };
+
+  // Limitar caracteres dos campos
+  const truncatedName = truncateText(doctor.name || "", 25);
+  const truncatedCRP = truncateText(doctor.crp || "", 20);
+  const truncatedSpecialty = truncateText(primarySpecialty, 20);
+
   return (
-    <div className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 inline-flex flex-col py-8 px-6 rounded-md hover:border-gray-400 dark:hover:border-gray-700 duration-300 transition-all shadow-sm">
-      <Link href={`/doctor/${doctor.id}`}>
-        <div className="mb-4">
-          <h2 className="uppercase font-bold text-2xl tracking-widest mb-2 dark:text-white">
-            {doctor.name}
-          </h2>
-          {doctor.crp && (
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">CRP: {doctor.crp}</p>
+    <div className="bg-white dark:bg-gray-900 w-full flex flex-col py-6 px-6 rounded-xl hover:shadow-lg duration-300 transition-all shadow-md border border-gray-100 dark:border-gray-800 min-h-[420px] h-full">
+      <div className="mb-5">
+        <h2 className="uppercase font-bold text-xl tracking-wide mb-2 text-green-800 dark:text-green-300 line-clamp-2 break-words" title={doctor.name || ""}>
+          {truncatedName}
+        </h2>
+        {doctor.crp && (
+          <p className="text-sm text-gray-600 dark:text-gray-400 truncate" title={doctor.crp}>
+            CRP: {truncatedCRP}
+          </p>
+        )}
+      </div>
+
+      <div className="flex items-start gap-4 mb-5">
+        <div className="relative flex-shrink-0">
+          <Image
+            src={doctor.image || "/dotor.jpeg"}
+            width={96}
+            height={96}
+            alt={doctor.name}
+            className="w-24 h-24 rounded-full object-cover border border-gray-200 dark:border-gray-700"
+          />
+          {!isInPerson && (
+            <div className="absolute -bottom-1 -right-1 bg-green-500 w-10 h-10 flex items-center justify-center rounded-lg text-white border-2 border-white dark:border-gray-900 shadow-md">
+              <Video className="w-5 h-5" />
+            </div>
           )}
         </div>
 
-        <div className="flex items-start gap-4 py-4">
-          <div className="relative flex-shrink-0">
-            <Image
-              src={doctor.image || "/dotor.jpeg"}
-              width={96}
-              height={96}
-              alt={doctor.name}
-              className="w-24 h-24 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
-            />
-            {!isInPerson && (
-              <p className="absolute bottom-0 right-0 bg-green-200 dark:bg-green-800 w-10 h-10 flex items-center justify-center rounded-full text-green-700 dark:text-green-300 border-2 border-white dark:border-gray-900">
-                <Video className="w-5 h-5" />
-              </p>
-            )}
-          </div>
+        <div className="flex-1 flex flex-col gap-2.5 min-w-0">
+          {/* Especialidade */}
+          <p className="flex items-center text-sm text-gray-800 dark:text-gray-200 min-w-0">
+            <Stethoscope className="w-4 h-4 mr-2 shrink-0 text-green-600 dark:text-green-400" />
+            <span className="font-medium truncate" title={primarySpecialty}>{truncatedSpecialty}</span>
+          </p>
 
-          <div className="flex-1 flex flex-col gap-2">
-            {/* Especialidade */}
-            <p className="flex items-center text-sm">
-              <Stethoscope className="w-4 h-4 mr-2 shrink-0 text-green-600 dark:text-green-400" />
-              <span className="font-medium dark:text-gray-300">{primarySpecialty}</span>
+          {/* Telefone */}
+          {doctor.phone && (
+            <p className="flex items-center text-sm text-gray-800 dark:text-gray-200 min-w-0">
+              <Phone className="w-4 h-4 mr-2 shrink-0 text-green-600 dark:text-green-400" />
+              <a href={`tel:${doctor.phone}`} className="hover:text-green-600 dark:hover:text-green-400 transition-colors truncate" title={formatPhone(doctor.phone)}>
+                {formatPhone(doctor.phone)}
+              </a>
             </p>
-
-            {/* Experiência */}
-            {doctor.experience && (
-              <p className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                <Award className="w-4 h-4 mr-2 shrink-0" />
-                <span>{formatExperience(doctor.experience)}</span>
-              </p>
-            )}
-
-            {/* Telefone */}
-            {doctor.phone && (
-              <p className="flex items-center text-sm text-gray-700 dark:text-gray-300">
-                <Phone className="w-4 h-4 mr-2 shrink-0" />
-                <a href={`tel:${doctor.phone}`} className="hover:text-green-600 dark:hover:text-green-400">
-                  {formatPhone(doctor.phone)}
-                </a>
-              </p>
-            )}
-
-            {/* Biografia resumida */}
-            {shortBio && (
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-2 line-clamp-2">
-                {shortBio}
-              </p>
-            )}
-
-            {/* Status de disponibilidade */}
-            {nextSlots.length > 0 && (
-              <p className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300 py-2 px-4 rounded text-xs font-medium mt-2 inline-block">
-                Disponível hoje
-              </p>
-            )}
-          </div>
+          )}
         </div>
-      </Link>
+      </div>
+
+      {/* Status de disponibilidade */}
+      {nextSlots.length > 0 && (
+        <div className="mb-4">
+          <Link
+            href={`/doctor/${doctor.id}`}
+            className="bg-green-400 dark:bg-green-500 text-white py-2.5 px-4 rounded-lg text-sm font-medium inline-flex items-center gap-2 hover:bg-green-500 dark:hover:bg-green-600 transition-colors"
+          >
+            Disponível hoje
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+        </div>
+      )}
 
       {/* Horários disponíveis */}
       {nextSlots.length > 0 && (
-        <div className="pt-6 border-t border-gray-300 dark:border-gray-700 mt-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Clock className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+        <div className="pt-4 border-t border-gray-200 dark:border-gray-700 mb-4">
+          <div className="flex items-center gap-2 mb-3 min-w-0">
+            <Clock className="w-4 h-4 text-gray-600 dark:text-gray-400 shrink-0" />
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 truncate">
               Horários disponíveis hoje
             </h3>
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            {nextSlots.map((slot: string, i: number) => (
+          <div className="flex flex-wrap gap-2">
+            {nextSlots.slice(0, 3).map((slot: string, i: number) => (
               <Link
                 key={i}
-                className="bg-green-600 hover:bg-green-700 text-sm text-white p-2 text-center rounded transition-colors"
+                className="bg-green-600 hover:bg-green-700 text-sm text-white px-4 py-2.5 text-center rounded-lg transition-colors font-medium"
                 href={`/appointment?psychologistId=${doctor.id}&date=${today}&time=${slot}&type=${isInPerson ? 'PRESENCIAL' : 'ONLINE'}`}
               >
                 {formatTime(slot)}
               </Link>
             ))}
-            <Link
-              className="text-xs text-center bg-green-900 hover:bg-green-950 text-white py-2 px-3 rounded truncate transition-colors"
-              href={`/doctor/${doctor.id}`}
-            >
-              Ver Perfil
-            </Link>
           </div>
         </div>
       )}
 
-      {/* Botão ver perfil completo se não houver horários */}
-      {nextSlots.length === 0 && (
-        <div className="pt-6 border-t border-gray-300 dark:border-gray-700 mt-4">
-          <Link
-            className="w-full bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white py-2 px-4 rounded text-center block transition-colors"
-            href={`/doctor/${doctor.id}`}
-          >
-            Ver Perfil Completo
-          </Link>
-        </div>
-      )}
+      {/* Botão ver perfil completo */}
+      <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
+        <Link
+          className="w-full bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white py-3 px-4 rounded-lg text-center block transition-colors font-medium text-sm truncate"
+          href={`/doctor/${doctor.id}`}
+          title={nextSlots.length > 0 ? "Ver Perfil" : "Ver Perfil Completo"}
+        >
+          {nextSlots.length > 0 ? "Ver Perfil" : "Ver Perfil Completo"}
+        </Link>
+      </div>
     </div>
   );
 }

@@ -161,7 +161,7 @@ export default function LoginForm() {
       <div className="w-full max-w-md">
         {/* Logo e Título */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-green-600 dark:bg-green-500 rounded-2xl mb-4 shadow-lg">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-green-600 dark:bg-green-700 rounded-2xl mb-4 shadow-lg">
             <Heart className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
@@ -173,7 +173,7 @@ export default function LoginForm() {
         </div>
 
         {/* Card de Login */}
-        <Card className="border-0 shadow-xl dark:shadow-2xl">
+        <Card className="border-0 shadow-xl dark:shadow-2xl dark:bg-gray-800 dark:border-gray-700">
           <CardHeader className="space-y-1 pb-4">
             <CardTitle className="text-2xl text-center">Entrar na sua conta</CardTitle>
             <CardDescription className="text-center">
@@ -219,7 +219,7 @@ export default function LoginForm() {
                   </Label>
                   <Link
                     href="/forgot-password"
-                    className="text-xs text-green-600 dark:text-green-400 hover:underline font-medium"
+                    className="text-xs text-green-600 dark:text-green-500 hover:underline font-medium"
                   >
                     Esqueceu a senha?
                   </Link>
@@ -262,7 +262,7 @@ export default function LoginForm() {
               {/* Botão de Submit */}
               <Button
                 type="submit"
-                className="w-full h-11 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white font-semibold"
+                className="w-full h-11 bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white font-semibold"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -297,7 +297,7 @@ export default function LoginForm() {
                 Ainda não tem uma conta?{" "}
                 <Link
                   href="/register"
-                  className="font-semibold text-green-600 dark:text-green-400 hover:underline"
+                  className="font-semibold text-green-600 dark:text-green-500 hover:underline"
                 >
                   Criar conta
                 </Link>
@@ -310,11 +310,11 @@ export default function LoginForm() {
         <div className="mt-6 text-center">
           <p className="text-xs text-gray-500 dark:text-gray-500">
             Ao entrar, você concorda com nossos{" "}
-            <Link href="/terms" className="underline hover:text-green-600 dark:hover:text-green-400">
+            <Link href="/terms" className="underline hover:text-green-600 dark:hover:text-green-500">
               Termos de Uso
             </Link>{" "}
             e{" "}
-            <Link href="/privacy" className="underline hover:text-green-600 dark:hover:text-green-400">
+            <Link href="/privacy" className="underline hover:text-green-600 dark:hover:text-green-500">
               Política de Privacidade
             </Link>
           </p>
@@ -324,7 +324,7 @@ export default function LoginForm() {
         <div className="mt-4 text-center">
           <Link
             href="/"
-            className="text-sm text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 inline-flex items-center gap-1"
+            className="text-sm text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-500 inline-flex items-center gap-1"
           >
             ← Voltar para o início
           </Link>

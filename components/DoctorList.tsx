@@ -33,7 +33,7 @@ export default function DoctorList({
             <div className="max-w-6xl mx-auto">
                 <SectionHeading title={title} />
 
-                <div className="py-6">
+                <div className="py-6 px-4">
                     {isLoading ? (
                         <div className="text-center py-8">
                             <p className="text-muted-foreground">Carregando psicólogos...</p>

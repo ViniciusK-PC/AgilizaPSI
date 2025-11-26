@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Criar link de reset
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://191.5.216.22:3000";
     const resetLink = `${baseUrl}/reset-password/${resetToken}`;
 
     // Enviar email

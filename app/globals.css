@@ -128,4 +128,107 @@ body {
   }
 }
 
+/* Estilos customizados para o carousel de cards de profissionais */
+.carousel-container {
+  padding: 1rem 0;
+  overflow: visible;
+}
+
+.carousel-container .react-multi-carousel-list {
+  overflow: visible;
+}
+
+.carousel-container .react-multi-carousel-item {
+  padding: 0 0.75rem;
+  display: flex;
+  height: 100%;
+}
+
+.carousel-container .react-multi-carousel-item > div {
+  width: 100%;
+  height: 100%;
+  display: flex;
+}
+
+.custom-dot-list-style {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.custom-dot-list-style li {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #d1d5db;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.custom-dot-list-style li.react-multi-carousel-dot--active {
+  background-color: #16a34a;
+  width: 24px;
+  border-radius: 4px;
+}
+
+.custom-dot-list-style li button {
+  border: none;
+  background: transparent;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+/* Estilos para as setas de navegação do carousel */
+.carousel-container .react-multi-carousel-list {
+  position: relative;
+}
+
+.carousel-container button.react-multi-carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(107, 114, 128, 0.8);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+
+.carousel-container button.react-multi-carousel-arrow:hover {
+  background-color: rgba(107, 114, 128, 1);
+}
+
+.carousel-container button.react-multi-carousel-arrow::before {
+  color: white;
+  font-size: 16px;
+}
+
+.carousel-container .react-multi-carousel-arrow--left {
+  left: -50px;
+}
+
+.carousel-container .react-multi-carousel-arrow--right {
+  right: -50px;
+}
+
+/* Garantir que os cards não se sobreponham */
+.carousel-container .react-multi-carousel-track {
+  display: flex;
+  align-items: stretch;
+}
+
+.carousel-container .react-multi-carousel-track .react-multi-carousel-item {
+  display: flex;
+  align-items: stretch;
+}
+
 

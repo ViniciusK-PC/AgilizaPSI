@@ -34,6 +34,11 @@ const nextConfig = {
     }
     return config;
   },
+  // Melhorar geração de chunks
+  onDemandEntries: {
+    maxInactiveAge: 25 * 1000,
+    pagesBufferLength: 2,
+  },
 };
 
 module.exports = withFlowbiteReact(nextConfig);

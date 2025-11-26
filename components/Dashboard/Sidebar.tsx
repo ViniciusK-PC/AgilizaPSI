@@ -3,10 +3,9 @@
 "use client";
 
 
-import { Bell, Home, Calendar, FileText, DollarSign, Video,
-  Package, Package2, ShoppingCart, TrendingUp, Users, Settings, BarChart3, CalendarDays, MessageSquare } from "lucide-react";
+import { Home, Calendar, FileText, DollarSign, Video,
+  Users, Settings, BarChart3, CalendarDays, MessageSquare } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/badge";
@@ -61,14 +60,11 @@ export default function Sidebar() {
       <aside className="w-72 border-r border-border bg-background flex flex-col">
             <div className="flex h-16 items-center border-b px-4 lg:h-[60] lg:px-6">
             <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-           
-            <Package2 className="h-6 w-6"/>
-             <span className="font-semibold text-lg">AgilizaPSI</span>
+              <div className="w-8 h-8 bg-green-600 dark:bg-green-500 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-xl">Ψ</span>
+              </div>
+              <span className="font-semibold text-lg text-green-950 dark:text-green-400">AgilizaPSI</span>
             </Link>
-            <Button variant="outline" size="icon" className="ml-auto h-8 w-8">
-              <Bell className="h-4 w-4" />
-              <span className="sr-only">Toogle notifications</span>
-            </Button>
            </div>
           
         <nav className="flex-1 p-4 space-y-1">

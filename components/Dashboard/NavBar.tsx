@@ -3,7 +3,6 @@
 
 import { LogOut, Home } from "lucide-react";
 import { Button } from "@/components/ui/button"
-import { ModeToggle } from "../ModeToggle";
 import UserProfile from "./UserProfile";
 import AdminProfile from "./AdminProfile";
 import SessionSwitcher from "./SessionSwitcher";
@@ -44,9 +43,13 @@ export default function Navbar() {
       clearTabSession();
     }
     
-    // Fazer logout do NextAuth (limpa cookie compartilhado)
-    // Mas outras guias ainda terão suas sessões no sessionStorage
-    await signOut({ callbackUrl: "/" });
+    // Fazer logout do NextAuth sem redirecionamento automático
+    await signOut({ redirect: false });
+    
+    // Redirecionar manualmente para garantir que use o domínio correto
+    if (typeof window !== 'undefined') {
+      window.location.href = '/';
+    }
   }
   
   // Sempre renderizar o header para evitar problemas de hidratação
@@ -67,7 +70,6 @@ export default function Navbar() {
         </Button>
       </div>
       <div className="flex items-center gap-3">
-        <ModeToggle/>
         {mounted ? (
           <>
             <SessionSwitcher />

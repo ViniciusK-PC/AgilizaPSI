@@ -47,7 +47,7 @@ export default function DoctorListCarousel({
       removeArrowOnDeviceType={["tablet", "mobile"]}
       // deviceType={}
       dotListClass="custom-dot-list-style"
-      itemClass="px-4"
+      itemClass="px-3"
     >
       {doctors.map((doctor: User, i: number) => {
         return <DoctorCard key={doctor.id || i} doctor={doctor} isInPerson={isInPerson} />

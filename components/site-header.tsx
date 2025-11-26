@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import { Menu, X, LogIn, User, LayoutDashboard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useSession, signOut } from 'next-auth/react'
-import { ModeToggle } from '@/components/ModeToggle'
 import { useQueryClient } from '@tanstack/react-query'
 
 export function SiteHeader() {
@@ -53,9 +52,6 @@ export function SiteHeader() {
 
         {/* Right Section */}
         <div className="flex items-center gap-2 md:gap-4">
-          {/* Theme Toggle */}
-          <ModeToggle />
-          
           {isValidSession ? (
             <>
               {session.user?.role === "USER" && (
@@ -95,8 +91,13 @@ export function SiteHeader() {
                     localStorage.clear();
                   }
                   
-                  // Fazer logout e redirecionar para home
-                  await signOut({ callbackUrl: '/', redirect: true });
+                  // Fazer logout sem redirecionamento automático
+                  await signOut({ redirect: false });
+                  
+                  // Redirecionar manualmente para garantir que use o domínio correto
+                  if (typeof window !== 'undefined') {
+                    window.location.href = '/';
+                  }
                 }}
                 className="text-sm"
               >
@@ -143,9 +144,6 @@ export function SiteHeader() {
               {item.label}
             </Link>
           ))}
-          <div className="pt-2 border-t border-gray-200 dark:border-gray-800">
-            <ModeToggle />
-          </div>
           {isValidSession ? (
             <div className="pt-4 border-t border-gray-200 dark:border-gray-800 space-y-2">
               {session.user?.role === "USER" && (
@@ -181,8 +179,13 @@ export function SiteHeader() {
                     localStorage.clear();
                   }
                   
-                  // Fazer logout e redirecionar para home
-                  await signOut({ callbackUrl: '/', redirect: true });
+                  // Fazer logout sem redirecionamento automático
+                  await signOut({ redirect: false });
+                  
+                  // Redirecionar manualmente para garantir que use o domínio correto
+                  if (typeof window !== 'undefined') {
+                    window.location.href = '/';
+                  }
                 }}
                 className="w-full text-sm"
               >

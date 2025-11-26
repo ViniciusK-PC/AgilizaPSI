@@ -46,9 +46,9 @@ export default function ServicesSection() {
             return (
               <div
                 key={index}
-                className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-800"
+                className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-800 h-full flex flex-col"
               >
-                <div className={`w-16 h-16 rounded-xl flex items-center justify-center mb-6 ${
+                <div className={`w-16 h-16 rounded-xl flex items-center justify-center mb-6 flex-shrink-0 ${
                 service.color === 'blue' ? 'bg-green-100 dark:bg-green-900/30' : 
                 service.color === 'indigo' ? 'bg-green-100 dark:bg-green-900/30' : 
                 'bg-green-100 dark:bg-green-900/30'
@@ -60,18 +60,18 @@ export default function ServicesSection() {
                   }`} />
                 </div>
                 
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3 flex-shrink-0">
                   {service.title}
                 </h3>
                 
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                <p className="text-gray-600 dark:text-gray-400 mb-6 flex-shrink-0 min-h-[3rem]">
                   {service.description}
                 </p>
 
-                <ul className="space-y-3 mb-6">
+                <ul className="space-y-3 mb-6 flex-1">
                   {service.features.map((feature, idx) => (
                     <li key={idx} className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                      <div className="w-2 h-2 bg-green-600 dark:bg-green-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-green-600 dark:bg-green-500 rounded-full flex-shrink-0"></div>
                       <span className="text-sm">{feature}</span>
                     </li>
                   ))}
@@ -79,7 +79,7 @@ export default function ServicesSection() {
 
                 <Link
                   href="/appointment"
-                  className={`inline-flex items-center justify-center w-full py-3 px-6 text-white rounded-lg font-semibold transition-colors ${
+                  className={`inline-flex items-center justify-center w-full py-3 px-6 text-white rounded-lg font-semibold transition-colors mt-auto flex-shrink-0 ${
                     service.color === 'blue' ? 'bg-green-600 hover:bg-green-700' : 
                     service.color === 'indigo' ? 'bg-green-600 hover:bg-green-700' : 
                     'bg-green-600 hover:bg-green-700'

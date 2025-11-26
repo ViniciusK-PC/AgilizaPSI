@@ -21,22 +21,60 @@ const Hero = () => {
     },
   });
 
-  // Buscar primeiro psicólogo para exibir no hero
-  const { data: psychologist } = useQuery({
-    queryKey: ["featured-psychologist"],
+  // Buscar primeiro psicólogo com imagem para exibir no hero
+  const { data: psychologist, isLoading: loadingPsychologist } = useQuery({
+    queryKey: ["featured-psychologist", isAuthenticated],
     queryFn: async () => {
-      const response = await fetch("/api/psychologists");
-      if (!response.ok) return null;
-      const data = await response.json();
-      return data.data?.[0] || null;
+      try {
+        const response = await fetch("/api/psychologists");
+        if (!response.ok) {
+          console.error("Erro na resposta da API:", response.status);
+          return null;
+        }
+        const data = await response.json();
+        
+        // Buscar o primeiro psicólogo que tenha imagem
+        const psychologists = data.data || [];
+        console.log("Psicólogos encontrados:", psychologists.length);
+        
+        // Priorizar psicólogos com imagem
+        const psychologistWithImage = psychologists.find((p: any) => p.image && p.image.trim() !== "");
+        
+        // Se não encontrar com imagem, pegar o primeiro disponível
+        const selected = psychologistWithImage || psychologists[0] || null;
+        console.log("Psicólogo selecionado:", selected?.name, "Tem imagem:", !!selected?.image);
+        
+        return selected;
+      } catch (error) {
+        console.error("Erro ao buscar psicólogo:", error);
+        return null;
+      }
     },
+    enabled: Boolean(isAuthenticated), // Só buscar quando estiver autenticado
+  });
+
+  // Buscar imagem do psicólogo via API separada se necessário
+  const { data: psychologistImage } = useQuery({
+    queryKey: ["psychologist-image", psychologist?.id],
+    queryFn: async () => {
+      if (!psychologist?.id) return null;
+      try {
+        const response = await fetch(`/api/user/image?userId=${psychologist.id}`);
+        if (!response.ok) return null;
+        const data = await response.json();
+        return data.image || null;
+      } catch {
+        return null;
+      }
+    },
+    enabled: Boolean(psychologist?.id && !psychologist?.image),
   });
 
   return (
     <div className="bg-gradient-to-br from-green-950 via-green-900 to-green-950 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-white">
       <div className="relative pb-20 pt-16 lg:pt-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className={`grid ${isAuthenticated ? 'lg:grid-cols-2' : 'lg:grid-cols-1'} gap-12 items-center`}>
-          {/* Conteúdo Principal */}
+        {!isAuthenticated ? (
+          /* Conteúdo Hero - Só aparece quando DESLOGADO */
           <div className="space-y-8">
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-800/30 rounded-full text-sm">
@@ -101,65 +139,91 @@ const Hero = () => {
               </div>
             </div>
 
-            {/* Botão de Login se não estiver logado */}
-            {!isAuthenticated && (
-              <div className="pt-4">
-                <Link
-                  href="/login"
-                  className="text-green-300 hover:text-green-200 text-sm underline"
-                >
-                  Já é paciente? Faça login para acessar seu dashboard
-                </Link>
+            {/* Botão de Login */}
+            <div className="pt-4">
+              <Link
+                href="/login"
+                className="text-green-300 hover:text-green-200 text-sm underline"
+              >
+                Já é paciente? Faça login para acessar seu dashboard
+              </Link>
+            </div>
+          </div>
+        ) : (
+          /* Foto do Profissional - Só aparece quando LOGADO */
+          <div className="flex justify-center items-center min-h-[400px]">
+            {loadingPsychologist ? (
+              <div className="flex items-center justify-center">
+                <div className="w-12 h-12 border-4 border-green-400 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : (
+              <div className="relative">
+                <div className="relative z-10">
+                  {(psychologist?.image || psychologistImage) ? (
+                    <div className="relative">
+                      <Image
+                        src={psychologistImage || psychologist?.image || "/dotor.jpeg"}
+                        alt={psychologist?.name || "Psicólogo"}
+                        width={500}
+                        height={600}
+                        className="rounded-2xl shadow-2xl object-cover w-full max-w-md h-[500px]"
+                        onError={(e) => {
+                          // Se a imagem falhar ao carregar, usar fallback
+                          const target = e.target as HTMLImageElement;
+                          target.src = "/dotor.jpeg";
+                        }}
+                      />
+                      {psychologist?.name && (
+                        <div className="absolute top-4 left-4 bg-white/90 dark:bg-gray-800/90 rounded-lg px-4 py-2 shadow-lg">
+                          <p className="font-semibold text-gray-900 dark:text-white text-sm">
+                            {psychologist.name}
+                          </p>
+                          {psychologist.crp && (
+                            <p className="text-xs text-gray-600 dark:text-gray-400">
+                              CRP: {psychologist.crp}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      <div className="absolute -bottom-6 -left-6 bg-white rounded-xl p-4 shadow-xl">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
+                            <Video className="w-6 h-6 text-white" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-900">Consultas Online</p>
+                            <p className="text-sm text-gray-600">Disponíveis 24/7</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-white/10 rounded-2xl p-12 backdrop-blur-sm min-w-[400px]">
+                      <div className="space-y-4 text-center">
+                        <div className="w-32 h-32 bg-white/20 rounded-full mx-auto flex items-center justify-center">
+                          <Video className="w-16 h-16" />
+                        </div>
+                        <h3 className="text-2xl font-bold">Atendimento Profissional</h3>
+                        <p className="text-green-200">
+                          Consultas online e presenciais com psicólogos qualificados
+                        </p>
+                        {psychologist && (
+                          <p className="text-green-300 text-sm mt-2">
+                            {psychologist.name}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Decoração de fundo */}
+                <div className="absolute -top-8 -right-8 w-64 h-64 bg-green-500/20 rounded-full blur-3xl"></div>
+                <div className="absolute -bottom-8 -left-8 w-48 h-48 bg-green-500/20 rounded-full blur-3xl"></div>
               </div>
             )}
           </div>
-
-          {/* Imagem/Ilustração - Só exibir se estiver logado */}
-          {isAuthenticated && (
-            <div className="relative hidden lg:block">
-              <div className="relative z-10">
-                {psychologist?.image ? (
-                  <div className="relative">
-                    <Image
-                      src={psychologist.image}
-                      alt={psychologist.name || "Psicóloga"}
-                      width={500}
-                      height={600}
-                      className="rounded-2xl shadow-2xl object-cover"
-                    />
-                    <div className="absolute -bottom-6 -left-6 bg-white rounded-xl p-4 shadow-xl">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
-                          <Video className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-gray-900">Consultas Online</p>
-                          <p className="text-sm text-gray-600">Disponíveis 24/7</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-white/10 rounded-2xl p-12 backdrop-blur-sm">
-                    <div className="space-y-4 text-center">
-                      <div className="w-32 h-32 bg-white/20 rounded-full mx-auto flex items-center justify-center">
-                        <Video className="w-16 h-16" />
-                      </div>
-                      <h3 className="text-2xl font-bold">Atendimento Profissional</h3>
-                      <p className="text-green-200">
-                        Consultas online e presenciais com psicólogos qualificados
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              {/* Decoração de fundo */}
-              <div className="absolute -top-8 -right-8 w-64 h-64 bg-green-500/20 rounded-full blur-3xl"></div>
-              <div className="absolute -bottom-8 -left-8 w-48 h-48 bg-green-500/20 rounded-full blur-3xl"></div>
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

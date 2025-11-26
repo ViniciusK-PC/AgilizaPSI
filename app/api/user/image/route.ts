@@ -6,8 +6,14 @@ import { prismaClient } from "@/lib/db";
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
 
-    if (!session?.user?.id) {
+    // Se userId for fornecido, buscar imagem desse usuário (para psicólogos)
+    // Caso contrário, buscar imagem do usuário logado
+    const targetUserId = userId || session?.user?.id;
+
+    if (!targetUserId) {
       return NextResponse.json(
         { error: "Não autenticado" },
         { status: 401 }
@@ -15,7 +21,7 @@ export async function GET(request: NextRequest) {
     }
 
     const user = await prismaClient.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: targetUserId },
       select: {
         id: true,
         image: true,
