@@ -11,3 +11,11 @@ https://sesamecare.com/?srsltid=AfmBOorkhc9DB-3qUUiNKDsSuyfYbaqJ9rA5AK1mvELV-UTb
 https://floatui.com/components/pricing-sections
 https://tidycal.com/pricing
 https://calendly.com/signup
+
+node scripts/create-admins.js
+
+# Criar admin principal
+GET http://localhost:3000/api/admin/create-admin
+
+# Criar super admin
+GET http://localhost:3000/api/admin/create-super-admin

@@ -1,3 +1,0 @@
-# 🧠 AgilizaPSI
-
-A AgilizaPSI tem como proposta de projeto criar um sistema de organização da agenda de psicólogos, permitindo que eles gerenciem seus pacientes, agendem consultas online e presenciais, registrem prontuários eletrônicos e mantenham comunicação direta com pacientes de forma eficiente e segura. A plataforma é projetada para psicólogos, pacientes e administradores de clínicas, proporcionando uma maneira intuitiva e centralizada de acessar e atualizar as informações dos pacientes, gerenciar disponibilidades, controlar pagamentos e realizar consultas através de sala virtual integrada.

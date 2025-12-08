@@ -12,11 +12,13 @@ import { Eye, EyeOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function AdminDashboard() {
   const { data: session } = useSession();
   const { session: tabSession } = useTabSession();
   const queryClient = useQueryClient();
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   
   // Usar sessão da guia (sessionStorage) se disponível, senão usar sessão do NextAuth (cookie)
@@ -156,8 +158,16 @@ export default function AdminDashboard() {
       <div className="grid gap-4 md:grid-cols-2">
         {metrics.map((metric, index) => {
           const Icon = metric.icon;
+          const isUsersCard = metric.title === "Total de Usuários";
+          
           return (
-            <Card key={index} className={`border-2 ${metric.borderColor || "border-gray-200 dark:border-gray-800"}`}>
+            <Card 
+              key={index} 
+              className={`border-2 ${metric.borderColor || "border-gray-200 dark:border-gray-800"} ${
+                isUsersCard ? "cursor-pointer hover:shadow-lg transition-shadow hover:border-blue-300 dark:hover:border-blue-700" : ""
+              }`}
+              onClick={isUsersCard ? () => router.push("/dashboard/admin/users") : undefined}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   {metric.title}
@@ -185,6 +195,22 @@ export default function AdminDashboard() {
                         </span>
                       </div>
                     ))}
+                  </div>
+                )}
+                {isUsersCard && (
+                  <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full text-xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push("/dashboard/admin/users");
+                      }}
+                    >
+                      <Users className="w-3 h-3 mr-2" />
+                      Ver Todos os Usuários
+                    </Button>
                   </div>
                 )}
               </CardContent>

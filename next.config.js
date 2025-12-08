@@ -39,6 +39,21 @@ const nextConfig = {
     maxInactiveAge: 25 * 1000,
     pagesBufferLength: 2,
   },
+  // Redirecionar rotas antigas para evitar 404
+  async redirects() {
+    return [
+      {
+        source: '/index.htm',
+        destination: '/',
+        permanent: true,
+      },
+      {
+        source: '/index.html',
+        destination: '/',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 module.exports = withFlowbiteReact(nextConfig);

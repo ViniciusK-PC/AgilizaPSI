@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { UserRole } from "@prisma/client";
@@ -52,6 +53,7 @@ export default function AdminUsersList() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<UserRole | "ALL">("ALL");
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
 
   const queryClient = useQueryClient();
 
@@ -89,10 +91,62 @@ export default function AdminUsersList() {
     },
   });
 
+  const deleteMultipleMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const response = await fetch(`/api/admin/users`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Erro ao deletar usuários");
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      setSelectedUserIds(new Set());
+      toast.success(`${data.data.deleted} usuário(s) deletado(s) com sucesso`);
+      if (data.data.failed > 0) {
+        toast.error(`${data.data.failed} usuário(s) não puderam ser deletados`);
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
   const handleDelete = (id: string) => {
     if (!confirm("Tem certeza que deseja deletar este usuário? Esta ação não pode ser desfeita.")) return;
     deleteMutation.mutate(id);
   };
+
+  const handleSelectUser = (userId: string, checked: boolean) => {
+    const newSelected = new Set(selectedUserIds);
+    if (checked) {
+      newSelected.add(userId);
+    } else {
+      newSelected.delete(userId);
+    }
+    setSelectedUserIds(newSelected);
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedUserIds.size === 0) {
+      toast.error("Selecione pelo menos um usuário para excluir");
+      return;
+    }
+
+    const count = selectedUserIds.size;
+    if (!confirm(`Tem certeza que deseja deletar ${count} usuário(s)? Esta ação não pode ser desfeita.`)) {
+      return;
+    }
+
+    deleteMultipleMutation.mutate(Array.from(selectedUserIds));
+  };
+
+  const isAllSelected = users.length > 0 && selectedUserIds.size === users.length;
 
   const handleEdit = (user: User) => {
     setSelectedUser(user);
@@ -178,7 +232,20 @@ export default function AdminUsersList() {
       {/* Users Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Usuários ({users.length})</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Usuários ({users.length})</CardTitle>
+            {selectedUserIds.size > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleDeleteSelected}
+                disabled={deleteMultipleMutation.isPending}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Excluir Selecionados ({selectedUserIds.size})
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -197,6 +264,18 @@ export default function AdminUsersList() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={isAllSelected}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedUserIds(new Set(users.map((user) => user.id)));
+                          } else {
+                            setSelectedUserIds(new Set());
+                          }
+                        }}
+                      />
+                    </TableHead>
                     <TableHead>Usuário</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Telefone</TableHead>
@@ -209,6 +288,12 @@ export default function AdminUsersList() {
                 <TableBody>
                   {users.map((user) => (
                     <TableRow key={user.id}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedUserIds.has(user.id)}
+                          onCheckedChange={(checked) => handleSelectUser(user.id, checked as boolean)}
+                        />
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar>

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Users, Link2, Copy, RefreshCw, ExternalLink, Check } from "lucide-react";
+import { Users, Link2, Copy, RefreshCw, ExternalLink, Check, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import {
   Table,
@@ -80,6 +80,28 @@ export default function ProfessionalLinksManager() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["professionals-links"] });
       toast.success("Link regenerado com sucesso!");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const deleteLinkMutation = useMutation({
+    mutationFn: async (professionalId: string) => {
+      const response = await fetch(`/api/admin/professionals/delete-link`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ professionalId }),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Erro ao excluir profissional");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["professionals-links"] });
+      toast.success("Profissional excluído com sucesso!");
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -223,15 +245,30 @@ export default function ProfessionalLinksManager() {
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           {hasLink ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => regenerateLinkMutation.mutate(professional.id)}
-                              disabled={regenerateLinkMutation.isPending}
-                            >
-                              <RefreshCw className="w-4 h-4 mr-1" />
-                              Regenerar
-                            </Button>
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => regenerateLinkMutation.mutate(professional.id)}
+                                disabled={regenerateLinkMutation.isPending}
+                              >
+                                <RefreshCw className="w-4 h-4 mr-1" />
+                                Regenerar
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => {
+                                  if (confirm(`Tem certeza que deseja excluir o profissional "${professional.name}"?\n\nEsta ação não pode ser desfeita e excluirá todos os dados do profissional.`)) {
+                                    deleteLinkMutation.mutate(professional.id);
+                                  }
+                                }}
+                                disabled={deleteLinkMutation.isPending}
+                              >
+                                <Trash2 className="w-4 h-4 mr-1" />
+                                Excluir
+                              </Button>
+                            </>
                           ) : (
                             <Button
                               size="sm"
